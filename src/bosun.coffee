@@ -25,36 +25,42 @@ module.exports = (robot) ->
 
   robot.respond /list open bosun incidents/i, (res) ->
     if is_authorized robot, res
+      console.log "Retrieving Bosun incidents requested by #{res.envelope.user.name}."
       res.reply "Retrieving Bosun incidents ..."
       req = request.get("#{config.host}/api/incidents/open", {timeout: config.timeout}, (err, response, body) ->
         console.log(err.code == 'ETIMEDOUT') if err
         console.log(err.connect == true) if err
+        res.reply "Done."
         incidents = JSON.parse body
-        res.reply "There are currently #{incidents.length} active incidents"
-        console.log "There are currently #{incidents.length} active incidents"
-        reply_message = ""
+        console.log "There are currently #{incidents.length} active incidents in Bosun."
+        attachments = []
         for i in incidents
-          lastAbnormalTime = new Date i.LastAbnormalTime * 1000
-          start = new Date i.Start * 1000
-          reply_message += "  * *#{i.Id}*: #{i.AlertName} is #{i.CurrentStatus} since #{lastAbnormalTime} and was fired at #{start} with worst status #{i.WorstStatus}.\n"
-        reply_message += ""
+          # TODO: Format date resonable
+          start = new Date(i.Start * 1000).toISOString().replace(/T/, ' ').replace(/\..+/, ' UTC')
+          color = switch i.CurrentStatus
+            when 'normal' then 'good'
+            when 'warning' then 'warning'
+            when 'critical' then 'danger'
+            else '#439FE0'
+          acked = if i.NeedAck then '*Unacked*' else 'Acked'
+          attachment = {
+            fallback: "Incident #{i.Id} is #{i.CurrentStatus}"
+            color: color
+            title: "#{i.Id}: #{i.Subject}"
+            title_link: "#{config.host}/incident?id=#{i.Id}"
+            text: "#{acked} and active since #{start} with #{i.TagsString}."
+            mrkdwn_in: ["text"]
+          }
+          attachments.push attachment
+
         msgData = {
           channel: res.message.room
-          text: "There are currently #{incidents.length} active incidents"
-          attachments: [
-            {
-              fallback: "Fallback Message",
-              title: "Open Incidents",
-              title_link: config.host,
-              text: reply_message,
-              mrkdwn_in: ["text"]
-            }
-          ]
+          text: "There are currently #{incidents.length} active incidents in Bosun."
+          attachments: attachments
         }
         robot.adapter.customMessage msgData
       )
       # TODO: Wait for callback
-      res.reply "Done"
 
   robot.respond /(ack|close) bosun incident #(\d+)/i, (res) ->
     if is_authorized robot, res
