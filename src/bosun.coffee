@@ -20,28 +20,41 @@ Log = require 'log'
 config =
   host: process.env.HUBOT_BOSUN_HOST
   role: process.env.HUBOT_BOSUN_ROLE
-  slack: if process.env.HUBOT_BOSUN_SLACK == 'yes' then true else false
-  log_level: process.env.HUBOT_BOSUN_LOG_LEVEL or 'info'
+  slack: if process.env.HUBOT_BOSUN_SLACK is "yes" then true else false
+  log_level: process.env.HUBOT_BOSUN_LOG_LEVEL or "info"
   timeout: 10000
 
 logger = new Log config.log_level
+
+logger.notice "hubot-bosun: Started with Slack #{if config.slack then 'en' else 'dis'}abled and log level #{config.log_level}."
 
 module.exports = (robot) ->
 
   robot.respond /list open bosun incidents/i, (res) ->
     if is_authorized robot, res
-      logger.info "Retrieving Bosun incidents requested by #{res.envelope.user.name}."
+      logger.info "hubot-bosun: Retrieving Bosun incidents requested by #{res.envelope.user.name}."
       res.reply "Retrieving Bosun incidents ..."
       req = request.get("#{config.host}/api/incidents/open", {timeout: config.timeout}, (err, response, body) ->
-        logger.error "Requst to Bosun timed out." if err and (err.code == 'ETIMEDOUT')
-        logger.error "Connection to Bosun failed." if err and (err.connect == true)
-        res.reply "Done."
+        if err
+          logger.error "hubot-bosun: Requst to Bosun timed out." if err and (err.code == 'ETIMEDOUT')
+          logger.error "hubot-bosun: Connection to Bosun failed." if err and (err.connect == true)
+          res.reply "Ouuch. I'm sorry, but I could not contact Bosun."
+        else
+          res.reply "Yippie. Done."
+
         incidents = JSON.parse body
-        logger.info "There are currently #{incidents.length} active incidents in Bosun."
-        if config.slack
+        incidents.sort( (a,b) -> parseInt(a.Id) > parseInt(b.Id) )
+        status = "So, there are currently #{incidents.length} active incidents in Bosun."
+        logger.info "hubot-bosun: #{status}"
+
+        unless config.slack
+          res.reply status
+          for i in incidents
+            res.reply "#{i.Id} is #{i.CurrentStatus}: #{i.Subject}."
+        else
           attachments = []
           for i in incidents
-            # TODO: Format date resonable
+            # TODO: Find better format for date
             start = new Date(i.Start * 1000).toISOString().replace(/T/, ' ').replace(/\..+/, ' UTC')
             color = switch i.CurrentStatus
               when 'normal' then 'good'
@@ -49,7 +62,8 @@ module.exports = (robot) ->
               when 'critical' then 'danger'
               else '#439FE0'
             acked = if i.NeedAck then '*Unacked*' else 'Acked'
-            attachment = {
+
+            attachments.push {
               fallback: "Incident #{i.Id} is #{i.CurrentStatus}"
               color: color
               title: "#{i.Id}: #{i.Subject}"
@@ -57,17 +71,12 @@ module.exports = (robot) ->
               text: "#{acked} and active since #{start} with #{i.TagsString}."
               mrkdwn_in: ["text"]
             }
-            attachments.push attachment
 
-          msgData = {
+          robot.adapter.customMessage {
             channel: res.message.room
-            text: "There are currently #{incidents.length} active incidents in Bosun."
+            text: status
             attachments: attachments
           }
-          robot.adapter.customMessage msgData
-        else
-          for i in incidents
-            res.reply "#{i.Id} is #{i.CurrentStatus}: #{i.Subject}."
       )
 
   robot.respond /(ack|close) bosun incident #(\d+)/i, (res) ->
@@ -80,7 +89,7 @@ module.exports = (robot) ->
     res.send "yarly"
 
   robot.error (err, res) ->
-    robot.logger.error "DOES NOT COMPUTE"
+    robot.logger.error "hubot-bosun: DOES NOT COMPUTE"
 
     if res?
       res.reply "DOES NOT COMPUTE: #{err}"
@@ -97,6 +106,6 @@ is_authorized = (robot, res) ->
 warn_unauthorized = (res) ->
   user = res.envelope.user.name
   message = res.message.text
-  logger.warning "#{user} tried to run '#{message}' but was not authorized."
+  logger.warning "hubot-bosun: #{user} tried to run '#{message}' but was not authorized."
   res.reply "Sorry, you're not allowed to do that. You need the '#{config.role}' role."
 

@@ -40,8 +40,10 @@ describe 'bosun', ->
       expect(@room.messages).to.eql [
         ['alice', '@hubot list open bosun incidents']
         ['hubot', '@alice Retrieving Bosun incidents ...']
-        ['hubot', '@alice Done.']
-        ['hubot', '@alice 2 is normal: warning: <no value>.']
+        ['hubot', '@alice Yippie. Done.']
+        ['hubot', '@alice So, there are currently 2 active incidents in Bosun.']
+        ['hubot', '@alice 750 is warning: warning: <no value>.']
+        ['hubot', '@alice 759 is normal: warning: <no value>.']
       ]
 
   context "ack and close alarms", ->
@@ -78,25 +80,46 @@ mock_bosun = () ->
   http.createServer((req, resp) ->
       if req.url == '/api/incidents/open' and req.method == 'GET'
         resp.setHeader('Content-Type', 'application/json')
-        incidents = [ {
-          Id: 2,
-          Subject: 'warning: <no value>',
-          Start: 1467363958,
-          AlertName: 'test.lukas',
-          Tags: null,
-          TagsString: '{}',
-          CurrentStatus: 'normal',
-          WorstStatus: 'warning',
-          LastAbnormalStatus: 'warning',
-          LastAbnormalTime: 1467367498,
-          Unevaluated: false,
-          NeedAck: true,
-          Silenced: false,
-          Actions: [],
-          Events: [ [Object], [Object] ],
-          WarnNotificationChains: [],
-          CritNotificationChains: []
-        } ]
+        incidents = [
+          {
+            Id: 759,
+            Subject: 'warning: <no value>',
+            Start: 1467363958,
+            AlertName: 'test.lukas',
+            Tags: null,
+            TagsString: '{}',
+            CurrentStatus: 'normal',
+            WorstStatus: 'warning',
+            LastAbnormalStatus: 'warning',
+            LastAbnormalTime: 1467367498,
+            Unevaluated: false,
+            NeedAck: true,
+            Silenced: false,
+            Actions: [],
+            Events: [ [Object], [Object] ],
+            WarnNotificationChains: [],
+            CritNotificationChains: []
+          }
+          {
+            Id: 750,
+            Subject: 'warning: <no value>',
+            Start: 1467363958,
+            AlertName: 'test.lukas',
+            Tags: null,
+            TagsString: '{}',
+            CurrentStatus: 'warning',
+            WorstStatus: 'warning',
+            LastAbnormalStatus: 'warning',
+            LastAbnormalTime: 1467367498,
+            Unevaluated: false,
+            NeedAck: true,
+            Silenced: false,
+            Actions: [],
+            Events: [ [Object], [Object] ],
+            WarnNotificationChains: [],
+            CritNotificationChains: []
+          }
+        ]
         resp.end JSON.stringify incidents
     )
 
