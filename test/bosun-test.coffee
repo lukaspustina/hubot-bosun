@@ -64,25 +64,25 @@ describe 'bosun', ->
     context "ack single incident", ->
       beforeEach ->
         co =>
-          yield @room.user.say 'alice', '@hubot ack bosun incident #123 because it is normal again.'
+          yield @room.user.say 'alice', '@hubot ack bosun incident 123 because it is normal again.'
           yield new Promise.delay(wait_time)
 
       it 'ack bosun alarm', ->
         expect(@room.messages).to.eql [
-          ['alice', '@hubot ack bosun incident #123 because it is normal again.']
-          ['hubot', '@alice Trying to ack Bosun incident #123 ...']
+          ['alice', '@hubot ack bosun incident 123 because it is normal again.']
+          ['hubot', '@alice Trying to ack Bosun incident 123 ...']
         ]
 
     context "ack multiple incidents", ->
       beforeEach ->
         co =>
-          yield @room.user.say 'alice', '@hubot ack bosun incidents #123,234 because State is normal again.'
+          yield @room.user.say 'alice', '@hubot ack bosun incidents 123,234 because State is normal again.'
           yield new Promise.delay(wait_time)
 
       it 'ack bosun alarm', ->
         expect(@room.messages).to.eql [
-          ['alice', '@hubot ack bosun incidents #123,234 because State is normal again.']
-          ['hubot', '@alice Trying to ack Bosun incidents #123,234 ...']
+          ['alice', '@hubot ack bosun incidents 123,234 because State is normal again.']
+          ['hubot', '@alice Trying to ack Bosun incidents 123,234 ...']
         ]
 
      context "Other ack and close alarms", ->
@@ -91,9 +91,9 @@ describe 'bosun', ->
 
      context "Fail if unauthorized", ->
       it 'ack bosun incident for unauthorized bob', ->
-        @room.user.say('bob', '@hubot ack bosun incident #123 because it is over.').then =>
+        @room.user.say('bob', '@hubot ack bosun incident 123 because it is over.').then =>
           expect(@room.messages).to.eql [
-            ['bob', '@hubot ack bosun incident #123 because it is over.']
+            ['bob', '@hubot ack bosun incident 123 because it is over.']
             ['hubot', "@bob Sorry, you're not allowed to do that. You need the 'bosun' role."]
           ]
 

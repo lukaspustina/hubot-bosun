@@ -10,22 +10,27 @@
 #
 # Commands:
 #   list open bosun incidents - list all open incidents, unacked and acked, sorted by incident id
-#   <ack|close> bosun incident[s] #<Id,...> because <message> - acks or closes bosun incidents with the specific incident ids
+#   <ack|close> bosun incident[s] <Id,...> because <message> - acks or closes bosun incidents with the specific incident ids
 #
 # Notes:
-#   <optional notes required for the script>
+#   Enjoy and thank Stack Exchange for Bosun -- http://bosun.org.
 #
 # Author:
 #   lukas.pustina@gmail.com
 #
 # Todos:
-#   * Test for ack|close
+#   * Tests
+#     * Enhance Bosun mock to actually understand the ack|close commands
+#   * Prod Installation
+#     * Docker Container similar to Bosun for bosun_all-in-one
+#     * Ansible Role similar to bosun_all-in-one
 #   * Silences
 #     * get
 #     * set
 #     * clear
 #   (*) Listen for events
 #     * bosun:silence x - starts silence for x min
+#   (*) Graph queries
 
 request = require 'request'
 Log = require 'log'
@@ -45,20 +50,24 @@ module.exports = (robot) ->
 
   robot.respond /list open bosun incidents/i, (res) ->
     if is_authorized robot, res
-      logger.info "hubot-bosun: Retrieving Bosun incidents requested by #{res.envelope.user.name}."
+      user_name = res.envelope.user.name
+      logger.info "hubot-bosun: Retrieving Bosun incidents requested by #{user_name}."
+
       res.reply "Retrieving Bosun incidents ..."
+
       req = request.get("#{config.host}/api/incidents/open", {timeout: config.timeout}, (err, response, body) ->
         if err
-          logger.error "hubot-bosun: Requst to Bosun timed out." if err.code is 'ETIMEDOUT'
-          logger.error "hubot-bosun: Connection to Bosun failed." if err.connect is true or err.code is 'ECONNREFUSED'
-          logger.error "hubot-bosun: Failed to retrieve response from Bosun. Error: '#{err}', reponse: '#{response}', body: '#{body}'"
-          res.reply "Ouuch. I'm sorry, but I could not contact Bosun."
+          handle_bosun_err res, err, response, body
         else
           res.reply "Yippie. Done."
 
           incidents = JSON.parse body
           incidents.sort( (a,b) -> parseInt(a.Id) > parseInt(b.Id) )
-          status = if incidents.length is 0 then "Oh, no incidents there. Everything is ok." else "So, there are currently #{incidents.length} open incidents in Bosun."
+
+          status =
+            if incidents.length is 0
+            then "Oh, no incidents there. Everything is ok."
+            else "So, there are currently #{incidents.length} open incidents in Bosun."
           logger.info "hubot-bosun: #{status}"
 
           unless config.slack
@@ -77,11 +86,12 @@ module.exports = (robot) ->
                 else '#439FE0'
               acked = if i.NeedAck then '*Unacked*' else 'Acked'
 
-              text = "#{acked} and active since #{start} with #{i.TagsString}."
-              if i.Actions
-                for a in i.Actions
-                  time = new Date(a.Time * 1000).toISOString().replace(/T/, ' ').replace(/\..+/, ' UTC')
-                  text += "\n#{a.User} #{a.Type.toLowerCase()} this incident at #{time}."
+              actions = for a in i.Actions
+                time = new Date(a.Time * 1000).toISOString().replace(/T/, ' ').replace(/\..+/, ' UTC')
+                "* #{a.User} #{a.Type.toLowerCase()} this incident at #{time}."
+              text = "#{acked} and active since #{start} with _#{i.TagsString}_."
+              text += '\n' if actions.length > 0
+              text += actions.join('\n')
 
               attachments.push {
                 fallback: "Incident #{i.Id} is #{i.CurrentStatus}"
@@ -99,36 +109,28 @@ module.exports = (robot) ->
             }
       )
 
-  robot.respond /(ack|close) bosun incident[s]* #([\d,]+) because (.+)/i, (res) ->
+  robot.respond /(ack|close) bosun incident[s]* ([\d,]+) because (.+)/i, (res) ->
     if is_authorized robot, res
-      action = res.match[1]
-      incidents = res.match[2].split ','
-      message = res.match[3]
       user_name = res.envelope.user.name
-      logger.info "hubot-bosun: Executing '#{action}' for incident(s) #{incidents} requested by #{user_name}."
-      res.reply "Trying to #{action} Bosun incident#{if incidents.length > 1 then 's' else ''} ##{incidents} ..."
+      action = res.match[1]
+      ids = (parseInt(incident) for incident in res.match[2].split ',')
+      message = res.match[3]
+      logger.info "hubot-bosun: Executing '#{action}' for incident(s) #{ids.join(',')} requested by #{user_name}."
 
-      action_command = switch action
-        when 'ack' then 'ack'
-        when 'close' then 'close'
-      ids = []
-      ids.push parseInt(incident) for incident in incidents
+      res.reply "Trying to #{action} Bosun incident#{if ids.length > 1 then 's' else ''} #{ids.join(',')} ..."
+
       data = {
-        Type: "#{action_command}"
+        Type: "#{action}"
         User: "#{user_name}"
         Message: "#{message}"
         Ids: ids
         Notify: true
       }
-
       req = request.post("#{config.host}/api/action", {timeout: config.timeout, json: true, body: data}, (err, response, body) ->
         if err
-          logger.error "hubot-bosun: Requst to Bosun timed out." if err and (err.code == 'ETIMEDOUT')
-          logger.error "hubot-bosun: Connection to Bosun failed." if err and (err.connect == true)
-          res.reply "Ouuch. I'm sorry, but I couldn't contact Bosun."
+          handle_bosun_err res, err, response, body
         else
           logger.info "hubot-buson: Bosun replied with HTTP status code #{response.statusCode}"
-          logger.debug "hubot-buson: Body: #{body}"
 
           answer = switch response.statusCode
             when 200 then "Yippie. Done."
@@ -171,4 +173,11 @@ warn_unauthorized = (res) ->
   message = res.message.text
   logger.warning "hubot-bosun: #{user} tried to run '#{message}' but was not authorized."
   res.reply "Sorry, you're not allowed to do that. You need the '#{config.role}' role."
+
+handle_bosun_err = (res, err, response, body) ->
+  logger.error "hubot-bosun: Requst to Bosun timed out." if err.code is 'ETIMEDOUT'
+  logger.error "hubot-bosun: Connection to Bosun failed." if err.connect is true or err.code is 'ECONNREFUSED'
+  logger.error "hubot-bosun: Failed to retrieve response from Bosun. Error: '#{err}', reponse: '#{response}', body: '#{body}'"
+  res.reply "Ouuch. I'm sorry, but I couldn't contact Bosun."
+
 
