@@ -15,25 +15,29 @@
 #   lukas.pustina@gmail.com
 
 request = require 'request'
+Log = require 'log'
 
 config =
   host: process.env.HUBOT_BOSUN_HOST
   role: process.env.HUBOT_BOSUN_ROLE
   slack: if process.env.HUBOT_BOSUN_SLACK == 'yes' then true else false
+  log_level: process.env.HUBOT_BOSUN_LOG_LEVEL or 'info'
   timeout: 10000
+
+logger = new Log config.log_level
 
 module.exports = (robot) ->
 
   robot.respond /list open bosun incidents/i, (res) ->
     if is_authorized robot, res
-      console.log "Retrieving Bosun incidents requested by #{res.envelope.user.name}."
+      logger.info "Retrieving Bosun incidents requested by #{res.envelope.user.name}."
       res.reply "Retrieving Bosun incidents ..."
       req = request.get("#{config.host}/api/incidents/open", {timeout: config.timeout}, (err, response, body) ->
-        console.log(err.code == 'ETIMEDOUT') if err
-        console.log(err.connect == true) if err
+        logger.error "Requst to Bosun timed out." if err and (err.code == 'ETIMEDOUT')
+        logger.error "Connection to Bosun failed." if err and (err.connect == true)
         res.reply "Done."
         incidents = JSON.parse body
-        console.log "There are currently #{incidents.length} active incidents in Bosun."
+        logger.info "There are currently #{incidents.length} active incidents in Bosun."
         if config.slack
           attachments = []
           for i in incidents
@@ -93,6 +97,6 @@ is_authorized = (robot, res) ->
 warn_unauthorized = (res) ->
   user = res.envelope.user.name
   message = res.message.text
-  console.log "#{user} tried to run '#{message}' but was not authorized."
+  logger.warning "#{user} tried to run '#{message}' but was not authorized."
   res.reply "Sorry, you're not allowed to do that. You need the '#{config.role}' role."
 

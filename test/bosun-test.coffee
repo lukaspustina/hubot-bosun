@@ -17,6 +17,7 @@ describe 'bosun', ->
     process.env.HUBOT_BOSUN_HOST = "http://localhost:18070"
     process.env.HUBOT_BOSUN_ROLE = "bosun"
     process.env.HUBOT_BOSUN_SLACK = "no"
+    process.env.HUBOT_BOSUN_LOG_LEVEL = "error"
 
     @room = helper.createRoom()
     @room.robot.auth = new MockAuth
