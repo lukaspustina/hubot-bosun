@@ -33,71 +33,77 @@ describe 'bosun', ->
     @bosun.close()
 
   context "list incidents", ->
-    beforeEach ->
-      co =>
-        yield @room.user.say 'alice', '@hubot list open bosun incidents'
-        yield new Promise.delay(wait_time)
 
-    it 'list bosun incidents', ->
-      expect(@room.messages).to.eql [
-        ['alice', '@hubot list open bosun incidents']
-        ['hubot', '@alice Retrieving Bosun incidents ...']
-        ['hubot', '@alice Yippie. Done.']
-        ['hubot', '@alice So, there are currently 2 open incidents in Bosun.']
-        ['hubot', '@alice 750 is warning: warning: <no value>.']
-        ['hubot', '@alice 759 is normal: warning: <no value>.']
-      ]
+    context "list incidents for authorized user", ->
+      beforeEach ->
+        co =>
+          yield @room.user.say 'alice', '@hubot list open bosun incidents'
+          yield new Promise.delay(wait_time)
 
-  context "ack and close single incident", ->
-    beforeEach ->
-      co =>
-        yield @room.user.say 'alice', '@hubot ack bosun incident #123 because it is normal again.'
-        yield new Promise.delay(wait_time)
+      it 'list bosun incidents', ->
+        expect(@room.messages).to.eql [
+          ['alice', '@hubot list open bosun incidents']
+          ['hubot', '@alice Retrieving Bosun incidents ...']
+          ['hubot', '@alice Yippie. Done.']
+          ['hubot', '@alice So, there are currently 2 open incidents in Bosun.']
+          ['hubot', '@alice 750 is warning: warning: <no value>.']
+          ['hubot', '@alice 759 is normal: warning: <no value>.']
+        ]
 
-    it 'ack bosun alarm', ->
-      expect(@room.messages).to.eql [
-        ['alice', '@hubot ack bosun incident #123 because it is normal again.']
-        ['hubot', '@alice Trying to ack Bosun incident #123 ...']
-      ]
+     context "Fail if unauthorized", ->
 
-  context "ack and close multiple incidents", ->
-    beforeEach ->
-      co =>
-        yield @room.user.say 'alice', '@hubot ack bosun incidents #123,234 because State is normal again.'
-        yield new Promise.delay(wait_time)
+      it 'list open bosun incidents for unauthorized bob', ->
+        @room.user.say('bob', '@hubot list open bosun incidents').then =>
+          expect(@room.messages).to.eql [
+            ['bob', '@hubot list open bosun incidents']
+            ['hubot', "@bob Sorry, you're not allowed to do that. You need the 'bosun' role."]
+          ]
 
-    it 'ack bosun alarm', ->
-      expect(@room.messages).to.eql [
-        ['alice', '@hubot ack bosun incidents #123,234 because State is normal again.']
-        ['hubot', '@alice Trying to ack Bosun incidents #123,234 ...']
-      ]
+  context "ack and close incidents", ->
 
-   #context "Other: ack and close alarms", ->
+    context "ack single incident", ->
+      beforeEach ->
+        co =>
+          yield @room.user.say 'alice', '@hubot ack bosun incident #123 because it is normal again.'
+          yield new Promise.delay(wait_time)
 
-    #it 'close bosun alarm', ->
-      #@room.user.say('alice', '@hubot close bosun incident #123').then =>
-        #expect(@room.messages).to.eql [
-          #['alice', '@hubot close bosun incident #123']
-          #['hubot', '@alice Will close bosun incident #123.']
-        #]
+      it 'ack bosun alarm', ->
+        expect(@room.messages).to.eql [
+          ['alice', '@hubot ack bosun incident #123 because it is normal again.']
+          ['hubot', '@alice Trying to ack Bosun incident #123 ...']
+        ]
 
-    #it 'close active bosun alarm', ->
-      #@room.user.say('alice', '@hubot close bosun incident #123').then =>
-        #expect(@room.messages).to.eql [
-          #['alice', '@hubot close bosun incident #123']
-          #['hubot', '@alice Ouuch. Incident #123 is still active. I cannot close active incidents.']
-        #]
+    context "ack multiple incidents", ->
+      beforeEach ->
+        co =>
+          yield @room.user.say 'alice', '@hubot ack bosun incidents #123,234 because State is normal again.'
+          yield new Promise.delay(wait_time)
 
-    #it 'ack bosun alarm for unauthorized bob', ->
-      #@room.user.say('bob', '@hubot ack bosun incident #123').then =>
-        #expect(@room.messages).to.eql [
-          #['bob', '@hubot ack bosun incident #123']
-          #['hubot', "@bob Sorry, you're not allowed to do that. You need the 'bosun' role."]
-        #]
+      it 'ack bosun alarm', ->
+        expect(@room.messages).to.eql [
+          ['alice', '@hubot ack bosun incidents #123,234 because State is normal again.']
+          ['hubot', '@alice Trying to ack Bosun incidents #123,234 ...']
+        ]
+
+     context "Other ack and close alarms", ->
+
+      it 'fail to close active bosun alarm'
+
+     context "Fail if unauthorized", ->
+      it 'ack bosun incident for unauthorized bob', ->
+        @room.user.say('bob', '@hubot ack bosun incident #123 because it is over.').then =>
+          expect(@room.messages).to.eql [
+            ['bob', '@hubot ack bosun incident #123 because it is over.']
+            ['hubot', "@bob Sorry, you're not allowed to do that. You need the 'bosun' role."]
+          ]
 
   context "error handling", ->
 
+      it 'Catch errors'
+
   context "show config", ->
+
+      it 'show bosun config'
 
 
 class MockAuth

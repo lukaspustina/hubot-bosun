@@ -17,6 +17,15 @@
 #
 # Author:
 #   lukas.pustina@gmail.com
+#
+# Todos:
+#   * Test for ack|close
+#   * Silences
+#     * get
+#     * set
+#     * clear
+#   (*) Listen for events
+#     * bosun:silence x - starts silence for x min
 
 request = require 'request'
 Log = require 'log'
