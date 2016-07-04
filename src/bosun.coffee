@@ -19,6 +19,7 @@ request = require 'request'
 config =
   host: process.env.HUBOT_BOSUN_HOST
   role: process.env.HUBOT_BOSUN_ROLE
+  slack: if process.env.HUBOT_BOSUN_SLACK == 'yes' then true else false
   timeout: 10000
 
 module.exports = (robot) ->
@@ -33,34 +34,37 @@ module.exports = (robot) ->
         res.reply "Done."
         incidents = JSON.parse body
         console.log "There are currently #{incidents.length} active incidents in Bosun."
-        attachments = []
-        for i in incidents
-          # TODO: Format date resonable
-          start = new Date(i.Start * 1000).toISOString().replace(/T/, ' ').replace(/\..+/, ' UTC')
-          color = switch i.CurrentStatus
-            when 'normal' then 'good'
-            when 'warning' then 'warning'
-            when 'critical' then 'danger'
-            else '#439FE0'
-          acked = if i.NeedAck then '*Unacked*' else 'Acked'
-          attachment = {
-            fallback: "Incident #{i.Id} is #{i.CurrentStatus}"
-            color: color
-            title: "#{i.Id}: #{i.Subject}"
-            title_link: "#{config.host}/incident?id=#{i.Id}"
-            text: "#{acked} and active since #{start} with #{i.TagsString}."
-            mrkdwn_in: ["text"]
-          }
-          attachments.push attachment
+        if config.slack
+          attachments = []
+          for i in incidents
+            # TODO: Format date resonable
+            start = new Date(i.Start * 1000).toISOString().replace(/T/, ' ').replace(/\..+/, ' UTC')
+            color = switch i.CurrentStatus
+              when 'normal' then 'good'
+              when 'warning' then 'warning'
+              when 'critical' then 'danger'
+              else '#439FE0'
+            acked = if i.NeedAck then '*Unacked*' else 'Acked'
+            attachment = {
+              fallback: "Incident #{i.Id} is #{i.CurrentStatus}"
+              color: color
+              title: "#{i.Id}: #{i.Subject}"
+              title_link: "#{config.host}/incident?id=#{i.Id}"
+              text: "#{acked} and active since #{start} with #{i.TagsString}."
+              mrkdwn_in: ["text"]
+            }
+            attachments.push attachment
 
-        msgData = {
-          channel: res.message.room
-          text: "There are currently #{incidents.length} active incidents in Bosun."
-          attachments: attachments
-        }
-        robot.adapter.customMessage msgData
+          msgData = {
+            channel: res.message.room
+            text: "There are currently #{incidents.length} active incidents in Bosun."
+            attachments: attachments
+          }
+          robot.adapter.customMessage msgData
+        else
+          for i in incidents
+            res.reply "#{i.Id} is #{i.CurrentStatus}: #{i.Subject}."
       )
-      # TODO: Wait for callback
 
   robot.respond /(ack|close) bosun incident #(\d+)/i, (res) ->
     if is_authorized robot, res
@@ -87,7 +91,7 @@ is_authorized = (robot, res) ->
     true
 
 warn_unauthorized = (res) ->
-  user = res.envelope.user
+  user = res.envelope.user.name
   message = res.message.text
   console.log "#{user} tried to run '#{message}' but was not authorized."
   res.reply "Sorry, you're not allowed to do that. You need the '#{config.role}' role."
