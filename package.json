@@ -1,7 +1,7 @@
 {
   "name": "hubot-bosun",
   "description": "Allows hubot to interact with Bosun.",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "author": "lukas.pustina@gmail.com",
   "license": "MIT",
   "keywords": "hubot, bosun",
