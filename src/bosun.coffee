@@ -9,7 +9,7 @@
 #   HUBOT_BOSUN_TIMEOUT - Timeout for calls to Bosun host, defauult is 10.000 ms
 #
 # Commands:
-#   list open bosun incidents - list all open incidents, unacked and acked, sorted by incident id
+#   show open bosun incidents - list all open incidents, unacked and acked, sorted by incident id
 #   <ack|close> bosun incident[s] <Id,...> because <message> - acks or closes bosun incidents with the specific incident ids
 #
 # Notes:
