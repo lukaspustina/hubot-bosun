@@ -48,7 +48,7 @@ logger.notice "hubot-bosun: Started with Bosun server #{config.host}, Slack #{if
 
 module.exports = (robot) ->
 
-  robot.respond /list open bosun incidents/i, (res) ->
+  robot.respond /show open bosun incidents/i, (res) ->
     if is_authorized robot, res
       user_name = res.envelope.user.name
       logger.info "hubot-bosun: Retrieving Bosun incidents requested by #{user_name}."

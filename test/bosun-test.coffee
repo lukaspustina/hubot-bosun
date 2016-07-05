@@ -32,17 +32,17 @@ describe 'bosun', ->
     @room.destroy()
     @bosun.close()
 
-  context "list incidents", ->
+  context "show incidents", ->
 
-    context "list incidents for authorized user", ->
+    context "show incidents for authorized user", ->
       beforeEach ->
         co =>
-          yield @room.user.say 'alice', '@hubot list open bosun incidents'
+          yield @room.user.say 'alice', '@hubot show open bosun incidents'
           yield new Promise.delay(wait_time)
 
-      it 'list bosun incidents', ->
+      it 'show bosun incidents', ->
         expect(@room.messages).to.eql [
-          ['alice', '@hubot list open bosun incidents']
+          ['alice', '@hubot show open bosun incidents']
           ['hubot', '@alice Retrieving Bosun incidents ...']
           ['hubot', '@alice Yippie. Done.']
           ['hubot', '@alice So, there are currently 2 open incidents in Bosun.']
@@ -52,10 +52,10 @@ describe 'bosun', ->
 
      context "Fail if unauthorized", ->
 
-      it 'list open bosun incidents for unauthorized bob', ->
-        @room.user.say('bob', '@hubot list open bosun incidents').then =>
+      it 'show open bosun incidents for unauthorized bob', ->
+        @room.user.say('bob', '@hubot show open bosun incidents').then =>
           expect(@room.messages).to.eql [
-            ['bob', '@hubot list open bosun incidents']
+            ['bob', '@hubot show open bosun incidents']
             ['hubot', "@bob Sorry, you're not allowed to do that. You need the 'bosun' role."]
           ]
 
