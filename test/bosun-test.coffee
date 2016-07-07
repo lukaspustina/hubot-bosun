@@ -73,6 +73,7 @@ describe 'bosun', ->
           expect(@room.messages).to.eql [
             ['alice', '@hubot ack bosun incident 123 because it is normal again.']
             ['hubot', '@alice Trying to ack Bosun incident 123 ...']
+            ['hubot', '@alice Yippie. Done.']
           ]
 
       context "Ack (with capital 'A') single incident", ->
@@ -98,6 +99,7 @@ describe 'bosun', ->
           expect(@room.messages).to.eql [
             ['alice', '@hubot ack bosun incidents 123,234 because State is normal again.']
             ['hubot', '@alice Trying to ack Bosun incidents 123,234 ...']
+            ['hubot', '@alice Yippie. Done.']
           ]
 
        context "Other ack and close alarms", ->
@@ -111,6 +113,151 @@ describe 'bosun', ->
               ['bob', '@hubot ack bosun incident 123 because it is over.']
               ['hubot', "@bob Sorry, you're not allowed to do that. You need the 'bosun' role."]
             ]
+
+  context "silences", ->
+
+    context "show silences", ->
+
+      context "show silences for authorized user", ->
+        beforeEach ->
+          co =>
+            yield @room.user.say 'alice', '@hubot show bosun silences'
+            yield new Promise.delay(wait_time)
+
+        it 'show bosun silences', ->
+          expect(@room.messages).to.eql [
+            ['alice', '@hubot show bosun silences']
+            ['hubot', '@alice Retrieving Bosun silences ...']
+            ['hubot', '@alice Yippie. Done.']
+            ['hubot', '@alice So, there are currently 2 active silences in Bosun.']
+            ['hubot', "@alice Silence 6e89533c74c3f9b74417b37e7cce75c384d29dc7 from 2016-07-04 15:18:03 UTC until 2016-07-04 16:18:03 UTC for tags host=cake,service=lukas and alert '' because Reboot"]
+            ['hubot', "@alice Silence dd406bdce72df2e8c69b5ee396126a7ed8f3bf44 from 2016-07-04 15:16:18 UTC until 2016-07-04 16:16:18 UTC for tags host=muffin,service=lukas and alert 'test.lukas' because Deployment"]
+          ]
+
+       context "Fail if unauthorized", ->
+
+        it 'show bosun silences for unauthorized bob', ->
+          @room.user.say('bob', '@hubot show bosun silences').then =>
+            expect(@room.messages).to.eql [
+              ['bob', '@hubot show bosun silences']
+              ['hubot', "@bob Sorry, you're not allowed to do that. You need the 'bosun' role."]
+            ]
+
+    context "set|test silences", ->
+
+      context "test silence with alert and tags for authorized user", ->
+        beforeEach ->
+          co =>
+            yield @room.user.say 'alice', '@hubot test bosun silence for alert=test.lukas,host=muffin,service=lukas for 1h because Deployment.'
+            yield new Promise.delay(wait_time)
+
+        it 'test bosun silences', ->
+          expect(@room.messages).to.eql [
+            ['alice', '@hubot test bosun silence for alert=test.lukas,host=muffin,service=lukas for 1h because Deployment.']
+            ['hubot', "@alice Trying to test Bosun silence for alert 'test.lukas' and tags {host:muffin,service:lukas} for 1h ..."]
+            ['hubot', '@alice Yippie. Done. That alarm will work.']
+          ]
+
+      context "test silence with alert only for authorized user", ->
+        beforeEach ->
+          co =>
+            yield @room.user.say 'alice', '@hubot test bosun silence for alert=test.lukas for 1h because Deployment.'
+            yield new Promise.delay(wait_time)
+
+        it 'test bosun silences', ->
+          expect(@room.messages).to.eql [
+            ['alice', '@hubot test bosun silence for alert=test.lukas for 1h because Deployment.']
+            ['hubot', "@alice Trying to test Bosun silence for alert 'test.lukas' for 1h ..."]
+            ['hubot', '@alice Yippie. Done. That alarm will work.']
+          ]
+
+      context "test silence with tags only for authorized user", ->
+        beforeEach ->
+          co =>
+            yield @room.user.say 'alice', '@hubot test bosun silence for host=muffin,service=lukas for 1h because Deployment.'
+            yield new Promise.delay(wait_time)
+
+        it 'test bosun silences', ->
+          expect(@room.messages).to.eql [
+            ['alice', '@hubot test bosun silence for host=muffin,service=lukas for 1h because Deployment.']
+            ['hubot', '@alice Trying to test Bosun silence for tags {host:muffin,service:lukas} for 1h ...']
+            ['hubot', '@alice Yippie. Done. That alarm will work.']
+          ]
+
+      context "set silence with alert and tags for authorized user", ->
+        beforeEach ->
+          co =>
+            yield @room.user.say 'alice', '@hubot set bosun silence for alert=test.lukas,host=muffin,service=lukas for 1h because Deployment.'
+            yield new Promise.delay(wait_time)
+
+        it 'set bosun silences', ->
+          expect(@room.messages).to.eql [
+            ['alice', '@hubot set bosun silence for alert=test.lukas,host=muffin,service=lukas for 1h because Deployment.']
+            ['hubot', "@alice Trying to set Bosun silence for alert 'test.lukas' and tags {host:muffin,service:lukas} for 1h ..."]
+            ['hubot', '@alice Yippie. Done. Admire your alarm at http://localhost:18070/silence.']
+          ]
+
+      context "set silence with alert only for authorized user", ->
+        beforeEach ->
+          co =>
+            yield @room.user.say 'alice', '@hubot set bosun silence for alert=test.lukas for 1h because Deployment.'
+            yield new Promise.delay(wait_time)
+
+        it 'set bosun silences', ->
+          expect(@room.messages).to.eql [
+            ['alice', '@hubot set bosun silence for alert=test.lukas for 1h because Deployment.']
+            ['hubot', "@alice Trying to set Bosun silence for alert 'test.lukas' for 1h ..."]
+            ['hubot', '@alice Yippie. Done. Admire your alarm at http://localhost:18070/silence.']
+          ]
+
+      context "test silence with tags only for authorized user", ->
+        beforeEach ->
+          co =>
+            yield @room.user.say 'alice', '@hubot set bosun silence for host=muffin,service=lukas for 1h because Deployment.'
+            yield new Promise.delay(wait_time)
+
+        it 'set bosun silences', ->
+          expect(@room.messages).to.eql [
+            ['alice', '@hubot set bosun silence for host=muffin,service=lukas for 1h because Deployment.']
+            ['hubot', '@alice Trying to set Bosun silence for tags {host:muffin,service:lukas} for 1h ...']
+            ['hubot', '@alice Yippie. Done. Admire your alarm at http://localhost:18070/silence.']
+          ]
+
+      context "Fail if unauthorized", ->
+
+        it 'set bosun silences for unauthorized bob', ->
+          @room.user.say('bob', '@hubot set bosun silence for alert=test.lukas,host=muffin for 1h because Deployment.').then =>
+            expect(@room.messages).to.eql [
+              ['bob', '@hubot set bosun silence for alert=test.lukas,host=muffin for 1h because Deployment.']
+              ['hubot', "@bob Sorry, you're not allowed to do that. You need the 'bosun' role."]
+            ]
+
+    context "clear silences", ->
+
+      context "clear silence for authorized user", ->
+        beforeEach ->
+          co =>
+            yield @room.user.say 'alice', '@hubot clear bosun silence 6e89533c74c3f9b74417b37e7cce75c384d29dc7'
+            yield new Promise.delay(wait_time)
+
+        it 'clear bosun silence', ->
+          expect(@room.messages).to.eql [
+            ['alice', '@hubot clear bosun silence 6e89533c74c3f9b74417b37e7cce75c384d29dc7']
+            ['hubot', '@alice Trying to clear Bosun silence 6e89533c74c3f9b74417b37e7cce75c384d29dc7 ...']
+            ['hubot', '@alice Yippie. Done.']
+          ]
+
+       context "Fail if unauthorized", ->
+
+        it 'clear bosun silence for unauthorized bob', ->
+          @room.user.say('bob', '@hubot clear bosun silence 6e89533c74c3f9b74417b37e7cce75c384d29dc7').then =>
+            expect(@room.messages).to.eql [
+              ['bob', '@hubot clear bosun silence 6e89533c74c3f9b74417b37e7cce75c384d29dc7']
+              ['hubot', "@bob Sorry, you're not allowed to do that. You need the 'bosun' role."]
+            ]
+
+
+
 
   context "error handling", ->
 
@@ -192,6 +339,49 @@ mock_bosun = () ->
               resp.write "#{id_errs.join ' '}"
               resp.write "]"
           resp.end()
-    )
 
+      if req.url == '/api/silence/get' and req.method == 'GET'
+        resp.setHeader('Content-Type', 'application/json')
+        silences =  {
+          "6e89533c74c3f9b74417b37e7cce75c384d29dc7": {
+            Start: "2016-07-04T15:18:03.877775182Z",
+            End: "2016-07-04T16:18:03.877775182Z",
+            Alert: "",
+            Tags: {
+              host: "cake",
+              service: "lukas"
+            },
+            TagString: "host=cake,service=lukas",
+            Forget: true,
+            User: "Lukas",
+            Message: "Reboot"
+          },
+          "dd406bdce72df2e8c69b5ee396126a7ed8f3bf44": {
+            Start: "2016-07-04T15:16:18.894444847Z",
+            End: "2016-07-04T16:16:18.894444847Z",
+            Alert: "test.lukas",
+            Tags: {
+              host: "muffin",
+              service: "lukas"
+            },
+            TagString: "host=muffin,service=lukas",
+            Forget: true,
+            User: "Lukas",
+            Message: "Deployment"
+          }
+        }
+        resp.end JSON.stringify silences
+
+      if req.url.match('/api/silence/set')? and req.method == 'POST'
+        body = ""
+        req.on 'data', (chunk) -> body += chunk
+        req.on 'end', () ->
+          data = JSON.parse body
+          resp.end()
+
+
+      if req.url.match('/api/silence/clear.+')? and req.method == 'POST'
+        resp.end ""
+
+    )
 
