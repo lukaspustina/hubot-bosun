@@ -112,7 +112,7 @@ module.exports = (robot) ->
   robot.respond /(ack|close) bosun incident[s]* ([\d,]+) because (.+)/i, (res) ->
     if is_authorized robot, res
       user_name = res.envelope.user.name
-      action = res.match[1]
+      action = res.match[1].toLowerCase()
       ids = (parseInt(incident) for incident in res.match[2].split ',')
       message = res.match[3]
       logger.info "hubot-bosun: Executing '#{action}' for incident(s) #{ids.join(',')} requested by #{user_name}."

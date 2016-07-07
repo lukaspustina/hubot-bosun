@@ -71,6 +71,20 @@ describe 'bosun', ->
         expect(@room.messages).to.eql [
           ['alice', '@hubot ack bosun incident 123 because it is normal again.']
           ['hubot', '@alice Trying to ack Bosun incident 123 ...']
+          ['hubot', '@alice Yippie. Done.']
+        ]
+
+    context "Ack (with capital 'A') single incident", ->
+      beforeEach ->
+        co =>
+          yield @room.user.say 'alice', '@hubot Ack bosun incident 123 because it is normal again.'
+          yield new Promise.delay(wait_time)
+
+      it 'ack bosun alarm', ->
+        expect(@room.messages).to.eql [
+          ['alice', '@hubot Ack bosun incident 123 because it is normal again.']
+          ['hubot', '@alice Trying to ack Bosun incident 123 ...']
+          ['hubot', '@alice Yippie. Done.']
         ]
 
     context "ack multiple incidents", ->
@@ -83,6 +97,7 @@ describe 'bosun', ->
         expect(@room.messages).to.eql [
           ['alice', '@hubot ack bosun incidents 123,234 because State is normal again.']
           ['hubot', '@alice Trying to ack Bosun incidents 123,234 ...']
+          ['hubot', '@alice Yippie. Done.']
         ]
 
      context "Other ack and close alarms", ->
@@ -164,7 +179,19 @@ mock_bosun = () ->
         resp.end JSON.stringify incidents
 
       if req.url == '/api/action' and req.method == 'POST'
-        resp.end
+        body = ""
+        req.on 'data', (chunk) -> body += chunk
+        req.on 'end', () ->
+          data = JSON.parse body
+          unless data.Type is "ack" or data.Type is "close"
+            resp.statusCode = 500;
+            resp.setHeader('Content-Type', 'text/plain');
+            if data.Ids?
+              resp.write "map["
+              id_errs = ("#{id}:unknown action type: none" for id in data.Ids)
+              resp.write "#{id_errs.join ' '}"
+              resp.write "]"
+          resp.end()
     )
 
 
