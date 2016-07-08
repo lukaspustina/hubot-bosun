@@ -27,6 +27,7 @@
 #   * Moment: Use relative time -- http://momentjs.com/
 #   * Tests
 #     * Enhance Bosun mock to actually understand the ack|close commands
+#     * Add tests for the slack control paths
 #   (*) Listen for events
 #     * bosun:silence x - starts silence for x min
 #   (*) Graph queries
@@ -76,7 +77,7 @@ module.exports = (robot) ->
           else
             attachments = []
             for i in incidents
-              start = format_date(new Date(i.Start * 1000).toISOString())
+              start = format_date_str(new Date(i.Start * 1000).toISOString())
               color = switch i.CurrentStatus
                 when 'normal' then 'good'
                 when 'warning' then 'warning'
