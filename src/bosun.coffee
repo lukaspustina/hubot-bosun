@@ -7,6 +7,7 @@
 #   HUBOT_BOSUN_SLACK - If 'yes' enables rich text formatting for Slack, default 'no'
 #   HUBOT_BOSUN_LOG_LEVEL - Log level, default 'info'
 #   HUBOT_BOSUN_TIMEOUT - Timeout for calls to Bosun host, defauult is 10.000 ms
+#   HUBOT_BOSUN_RELATIVE_TIME -- If 'yes' all dates and times are presented relatively to now.
 #
 # Commands:
 #   show open bosun incidents - shows all open incidents, unacked and acked, sorted by incident id
@@ -24,7 +25,6 @@
 # Todos:
 #   * Silences
 #     * Set from ... to ...
-#   * Moment: Use relative time -- http://momentjs.com/
 #   * Tests
 #     * Enhance Bosun mock to actually understand the ack|close commands
 #     * Add tests for the slack control paths
@@ -34,6 +34,7 @@
 
 request = require 'request'
 Log = require 'log'
+moment = require 'moment'
 
 config =
   host: process.env.HUBOT_BOSUN_HOST
@@ -41,6 +42,7 @@ config =
   slack: process.env.HUBOT_BOSUN_SLACK is "yes"
   log_level: process.env.HUBOT_BOSUN_LOG_LEVEL or "info"
   timeout: if process.env.HUBOT_BOSUN_TIMEOUT then parseInt process.env.HUBOT_BOSUN_TIMEOUT else 10000
+  relative_time: process.env.HUBOT_BOSUN_RELATIVE_TIME is "yes"
 
 logger = new Log config.log_level
 
@@ -361,6 +363,7 @@ handle_bosun_err = (res, err, response, body) ->
   res.reply "Ouuch. I'm sorry, but I couldn't contact Bosun."
 
 format_date_str = (date_str) ->
-  # TODO: Find better format for date
-  date_str.replace(/T/, ' ').replace(/\..+/, ' UTC')
-
+  if config.relative_time
+    moment(date_str).fromNow()
+  else
+    date_str.replace(/T/, ' ').replace(/\..+/, ' UTC')

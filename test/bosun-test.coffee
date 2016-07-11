@@ -20,6 +20,7 @@ describe 'bosun', ->
     process.env.HUBOT_BOSUN_ROLE = "bosun"
     process.env.HUBOT_BOSUN_SLACK = "no"
     process.env.HUBOT_BOSUN_LOG_LEVEL = "error"
+    process.env.HUBOT_BOSUN_RELATIVE_TIME = "no"
 
     @room = helper.createRoom()
     @room.robot.auth = new MockAuth
