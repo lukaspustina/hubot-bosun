@@ -23,8 +23,6 @@
 #   lukas.pustina@gmail.com
 #
 # Todos:
-#   * Silences
-#     * Set from ... to ...
 #   * Tests
 #     * Enhance Bosun mock to actually understand the ack|close commands
 #     * Add tests for the slack control paths
@@ -294,10 +292,6 @@ module.exports = (robot) ->
             }
       )
 
-
-  robot.respond /(set|test) bosun silence for (.+) from (.+) to (.+) because (.+)/i, (res) ->
-    if is_authorized robot, res
-      res.reply "Hey ya, everybody wants that, but it's not yet implemented"
 
   robot.respond /clear bosun silence (.+)/i, (res) ->
     if is_authorized robot, res
