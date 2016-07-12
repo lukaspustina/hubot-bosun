@@ -6,13 +6,13 @@ Promise = require('bluebird')
 co = require('co')
 expect = chai.expect
 
-helper = new Helper('../src/bosun.coffee')
-
 http = require 'http'
 
 process.env.EXPRESS_PORT = 18080
 
-wait_time = 100
+wait_time = 5
+
+customMessages = []
 
 describe 'bosun', ->
   beforeEach ->
@@ -22,6 +22,7 @@ describe 'bosun', ->
     process.env.HUBOT_BOSUN_LOG_LEVEL = "error"
     process.env.HUBOT_BOSUN_RELATIVE_TIME = "no"
 
+    helper = new Helper('../src/bosun.coffee')
     @room = helper.createRoom()
     @room.robot.auth = new MockAuth
 
@@ -32,6 +33,8 @@ describe 'bosun', ->
   afterEach ->
     @room.destroy()
     @bosun.close()
+    # Force reload of module under test
+    delete require.cache[require.resolve('../src/bosun')]
 
   context "incidents", ->
 
@@ -75,6 +78,19 @@ describe 'bosun', ->
             ['alice', '@hubot ack bosun incident 123 because it is normal again.']
             ['hubot', '@alice Trying to ack Bosun incident 123 ...']
             ['hubot', '@alice Yippie. Done.']
+          ]
+
+      context "fail to ack single incident", ->
+        beforeEach ->
+          co =>
+            yield @room.user.say 'alice', '@hubot ack bosun incident 321 because it is normal again.'
+            yield new Promise.delay(wait_time)
+
+        it 'ack bosun alarm', ->
+          expect(@room.messages).to.eql [
+            ['alice', '@hubot ack bosun incident 321 because it is normal again.']
+            ['hubot', '@alice Trying to ack Bosun incident 321 ...']
+            ['hubot', '@alice Bosun couldn\'t deal with that; maybe the incident doesn\'t exists or is still active? I suggest, you list the now open incidents. That\'s what Bosun told me: ```\nundefined\n```']
           ]
 
       context "Ack (with capital 'A') single incident", ->
@@ -159,7 +175,20 @@ describe 'bosun', ->
             ['hubot', '@alice Yippie. Done. That alarm will work.']
           ]
 
-      context "test silence with alert only for authorized user", ->
+       context "fail to test silence with alert and tags for authorized use", ->
+        beforeEach ->
+          co =>
+            yield @room.user.say 'alice', '@hubot test bosun silence for alert=test.fail,host=muffin,service=lukas for 1h because Deployment'
+            yield new Promise.delay(wait_time)
+
+        it 'ack bosun alarm', ->
+          expect(@room.messages).to.eql [
+            ['alice', '@hubot test bosun silence for alert=test.fail,host=muffin,service=lukas for 1h because Deployment']
+            ['hubot', "@alice Trying to test Bosun silence for alert 'test.fail' and tags {host:muffin,service:lukas} for 1h ..."]
+            ['hubot', '@alice Bosun couldn\'t deal with that. I suggest, you list the active silences now. That\'s what Bosun told me: ```\nundefined\n```']
+          ]
+
+     context "test silence with alert only for authorized user", ->
         beforeEach ->
           co =>
             yield @room.user.say 'alice', '@hubot test bosun silence for alert=test.lukas for 1h because Deployment.'
@@ -248,6 +277,19 @@ describe 'bosun', ->
             ['hubot', '@alice Yippie. Done.']
           ]
 
+       context "fail to clear silence for authorized user", ->
+        beforeEach ->
+          co =>
+            yield @room.user.say 'alice', '@hubot clear bosun silence xxx9533c74c3f9b74417b37e7cce75c384d29dc7'
+            yield new Promise.delay(wait_time)
+
+        it 'ack bosun alarm', ->
+          expect(@room.messages).to.eql [
+            ['alice', '@hubot clear bosun silence xxx9533c74c3f9b74417b37e7cce75c384d29dc7']
+            ['hubot', '@alice Trying to clear Bosun silence xxx9533c74c3f9b74417b37e7cce75c384d29dc7 ...']
+            ['hubot', "@alice Bosun couldn't deal with that; maybe the silence doesn't exists? I suggest, you list the open silences now. That's what Bosun told me: ```\nundefined\n```"]
+          ]
+
        context "Fail if unauthorized", ->
 
         it 'clear bosun silence for unauthorized bob', ->
@@ -258,8 +300,6 @@ describe 'bosun', ->
             ]
 
 
-
-
   context "error handling", ->
 
       it 'Catch errors'
@@ -267,6 +307,181 @@ describe 'bosun', ->
   context "show config", ->
 
       it 'show bosun config'
+
+
+describe 'bosun with Slack', ->
+  beforeEach ->
+    process.env.HUBOT_BOSUN_HOST = "http://localhost:18070"
+    process.env.HUBOT_BOSUN_ROLE = "bosun"
+    process.env.HUBOT_BOSUN_SLACK = "yes"
+    process.env.HUBOT_BOSUN_LOG_LEVEL = "error"
+    process.env.HUBOT_BOSUN_RELATIVE_TIME = "no"
+
+    helper = new Helper('../src/bosun.coffee')
+    @room = helper.createRoom()
+    @room.robot.auth = new MockAuth
+    customMessages = []
+    @room.robot.adapter.customMessage = slack_custom_message
+
+    @bosun = mock_bosun()
+    @bosun.listen(18070, "127.0.0.1")
+
+
+  afterEach ->
+    @room.destroy()
+    @bosun.close()
+    # Force reload of module under test
+    delete require.cache[require.resolve('../src/bosun')]
+
+  context "incidents", ->
+
+    context "show incidents", ->
+
+      context "show incidents for authorized user", ->
+        beforeEach ->
+          co =>
+            yield @room.user.say 'alice', '@hubot show open bosun incidents'
+            yield new Promise.delay(wait_time)
+
+        it 'show bosun incidents', ->
+          expect(@room.messages).to.eql [
+            ['alice', '@hubot show open bosun incidents']
+            ['hubot', '@alice Retrieving Bosun incidents ...']
+            ['hubot', '@alice Yippie. Done.']
+          ]
+          expect(customMessages[0]).to.eql {
+            channel: "room1"
+            text: "So, there are currently 2 open incidents in Bosun."
+            attachments: [
+              {
+                fallback:"Incident 750 is warning"
+                color: "warning"
+                title: "750: warning: <no value>"
+                title_link: "http://localhost:18070/incident?id=750"
+                text: "*Unacked* and active since 2016-07-01 09:05:58 UTC with _{}_."
+                mrkdwn_in: ["text"]
+              }, {
+                fallback: "Incident 759 is normal"
+                color: "good"
+                title: "759: warning: <no value>",
+                title_link: "http://localhost:18070/incident?id=759"
+                text: "Acked and active since 2016-07-01 09:05:58 UTC with _{}_.\n* lukas acknowledged this incident at 2016-07-01 22:16:37 UTC."
+                mrkdwn_in: ["text"]
+              }
+            ]
+          }
+
+      context "fail to ack single incident", ->
+        beforeEach ->
+          co =>
+            yield @room.user.say 'alice', '@hubot ack bosun incident 321 because it is normal again.'
+            yield new Promise.delay(wait_time)
+
+        it 'ack bosun alarm', ->
+          expect(@room.messages).to.eql [
+            ['alice', '@hubot ack bosun incident 321 because it is normal again.']
+            ['hubot', '@alice Trying to ack Bosun incident 321 ...']
+          ]
+          expect(customMessages[0]).to.eql {
+            channel: "room1"
+            attachments: [
+              {
+                color: "danger"
+                fallback: "Bosun couldn't deal with that; maybe the incident doesn't exists or is still active? I suggest, you list the now open incidents. That's what Bosun told me: ```\nundefined\n```"
+                mrkdwn_in: [ "text" ]
+                text: "Bosun couldn't deal with that; maybe the incident doesn't exists or is still active? I suggest, you list the now open incidents. That's what Bosun told me: ```\nundefined\n```"
+                title: "Argh. Failed to deal with Bosun's answer."
+              }
+            ]
+          }
+
+  context "silences", ->
+
+      context "show silences for authorized user", ->
+        beforeEach ->
+          co =>
+            yield @room.user.say 'alice', '@hubot show bosun silences'
+            yield new Promise.delay(wait_time)
+
+        it 'show bosun silences', ->
+          expect(@room.messages).to.eql [
+            ['alice', '@hubot show bosun silences']
+            ['hubot', '@alice Retrieving Bosun silences ...']
+            ['hubot', '@alice Yippie. Done.']
+          ]
+          expect(customMessages[0]).to.eql {
+            channel: "room1"
+            text: "So, there are currently 2 active silences in Bosun."
+            attachments: [
+              {
+                color: "danger"
+                fallback: "Slience 6e89533c74c3f9b74417b37e7cce75c384d29dc7 is active."
+                mrkdwn_in: [ "text" ]
+                text: "Active from 2016-07-04T15:18:03.877775182Z until 2016-07-04T16:18:03.877775182Z\nMessage: _Reboot_\nTags: host=cake,service=lukas\nId: 6e89533c74c3f9b74417b37e7cce75c384d29dc7"
+                title: "Slience is active."
+                title_link: "http://localhost:18070/silence"
+              }
+              {
+                color: "danger"
+                fallback: "Slience dd406bdce72df2e8c69b5ee396126a7ed8f3bf44 is active."
+                mrkdwn_in: [ "text" ]
+                text: "Active from 2016-07-04T15:16:18.894444847Z until 2016-07-04T16:16:18.894444847Z\nMessage: _Deployment_\nAlert: test.lukas\nTags: host=muffin,service=lukas\nId: dd406bdce72df2e8c69b5ee396126a7ed8f3bf44"
+                title: "Slience is active."
+                title_link: "http://localhost:18070/silence"
+              }
+            ]
+          }
+
+      context "fail to test silence with alert and tags for authorized use", ->
+        beforeEach ->
+          co =>
+            yield @room.user.say 'alice', '@hubot test bosun silence for alert=test.fail,host=muffin,service=lukas for 1h because Deployment'
+            yield new Promise.delay(wait_time)
+
+        it 'ack bosun alarm', ->
+          expect(@room.messages).to.eql [
+            ['alice', '@hubot test bosun silence for alert=test.fail,host=muffin,service=lukas for 1h because Deployment']
+            ['hubot', "@alice Trying to test Bosun silence for alert 'test.fail' and tags {host:muffin,service:lukas} for 1h ..."]
+          ]
+          expect(customMessages[0]).to.eql {
+            channel: "room1"
+            attachments: [
+              {
+                color: "danger"
+                fallback: "Bosun couldn't deal with that. I suggest, you list the active silences now. That's what Bosun told me: ```\nundefined\n```"
+                mrkdwn_in: [ "text" ]
+                text: "Bosun couldn't deal with that. I suggest, you list the active silences now. That's what Bosun told me: ```\nundefined\n```"
+                title: "Argh. Failed to deal with Bosun's answer."
+              }
+            ]
+          }
+
+       context "fail to clear silence for authorized user", ->
+        beforeEach ->
+          co =>
+            yield @room.user.say 'alice', '@hubot clear bosun silence xxx9533c74c3f9b74417b37e7cce75c384d29dc7'
+            yield new Promise.delay(wait_time)
+
+        it 'ack bosun alarm', ->
+          expect(@room.messages).to.eql [
+            ['alice', '@hubot clear bosun silence xxx9533c74c3f9b74417b37e7cce75c384d29dc7']
+            ['hubot', '@alice Trying to clear Bosun silence xxx9533c74c3f9b74417b37e7cce75c384d29dc7 ...']
+          ]
+          expect(customMessages[0]).to.eql {
+            channel: "room1"
+            attachments: [
+              {
+                color: "danger"
+                fallback: "Bosun couldn't deal with that; maybe the silence doesn't exists? I suggest, you list the open silences now. That's what Bosun told me: ```\nundefined\n```"
+                mrkdwn_in: [ "text" ]
+                text: "Bosun couldn't deal with that; maybe the silence doesn't exists? I suggest, you list the open silences now. That's what Bosun told me: ```\nundefined\n```"
+                title: "Argh. Failed to deal with Bosun's answer."
+              }
+            ]
+          }
+
+
+
 
 
 class MockAuth
@@ -332,13 +547,15 @@ mock_bosun = () ->
         req.on 'end', () ->
           data = JSON.parse body
           unless data.Type is "ack" or data.Type is "close"
-            resp.statusCode = 500;
+            resp.statusCode = 500
             resp.setHeader('Content-Type', 'text/plain');
             if data.Ids?
               resp.write "map["
               id_errs = ("#{id}:unknown action type: none" for id in data.Ids)
               resp.write "#{id_errs.join ' '}"
               resp.write "]"
+          unless 123 in data.Ids
+            resp.statusCode = 500;
           resp.end()
 
       if req.url == '/api/silence/get' and req.method == 'GET'
@@ -378,11 +595,18 @@ mock_bosun = () ->
         req.on 'data', (chunk) -> body += chunk
         req.on 'end', () ->
           data = JSON.parse body
+          if data.alert is "test.fail"
+            resp.statusCode = 500
           resp.end()
 
 
-      if req.url.match('/api/silence/clear.+')? and req.method == 'POST'
+      if (match = req.url.match('/api/silence/clear.id=(.+)'))? and req.method == 'POST'
+        id = match[1]
+        if id is "xxx9533c74c3f9b74417b37e7cce75c384d29dc7"
+          resp.statusCode = 500
         resp.end ""
 
     )
 
+slack_custom_message = (msg) ->
+  customMessages.push msg
