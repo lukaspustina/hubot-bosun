@@ -87,7 +87,7 @@ module.exports = (robot) ->
               acked = if i.NeedAck then '*Unacked*' else 'Acked'
 
               actions = for a in i.Actions
-                time = new Date(a.Time * 1000).toISOString().replace(/T/, ' ').replace(/\..+/, ' UTC')
+                time = format_date_str(new Date(a.Time * 1000).toISOString())
                 "* #{a.User} #{a.Type.toLowerCase()} this incident at #{time}."
               text = "#{acked} and active since #{start} with _#{i.TagsString}_."
               text += '\n' if actions.length > 0
@@ -197,7 +197,7 @@ module.exports = (robot) ->
                 when false then 'good'
                 when true then 'danger'
 
-              text = "Active from #{s.Start} until #{s.End}"
+              text = "Active from #{start} until #{end}"
               text += "\nMessage: _#{s.Message}_"
               text += "\nAlert: #{s.Alert}" if s.Alert != ""
               text += "\nTags: #{s.TagString}" if s.TagsString != ""

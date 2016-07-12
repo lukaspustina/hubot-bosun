@@ -417,7 +417,7 @@ describe 'bosun with Slack', ->
                 color: "danger"
                 fallback: "Slience 6e89533c74c3f9b74417b37e7cce75c384d29dc7 is active."
                 mrkdwn_in: [ "text" ]
-                text: "Active from 2016-07-04T15:18:03.877775182Z until 2016-07-04T16:18:03.877775182Z\nMessage: _Reboot_\nTags: host=cake,service=lukas\nId: 6e89533c74c3f9b74417b37e7cce75c384d29dc7"
+                text: "Active from 2016-07-04 15:18:03 UTC until 2016-07-04 16:18:03 UTC\nMessage: _Reboot_\nTags: host=cake,service=lukas\nId: 6e89533c74c3f9b74417b37e7cce75c384d29dc7"
                 title: "Slience is active."
                 title_link: "http://localhost:18070/silence"
               }
@@ -425,7 +425,7 @@ describe 'bosun with Slack', ->
                 color: "danger"
                 fallback: "Slience dd406bdce72df2e8c69b5ee396126a7ed8f3bf44 is active."
                 mrkdwn_in: [ "text" ]
-                text: "Active from 2016-07-04T15:16:18.894444847Z until 2016-07-04T16:16:18.894444847Z\nMessage: _Deployment_\nAlert: test.lukas\nTags: host=muffin,service=lukas\nId: dd406bdce72df2e8c69b5ee396126a7ed8f3bf44"
+                text: "Active from 2016-07-04 15:16:18 UTC until 2016-07-04 16:16:18 UTC\nMessage: _Deployment_\nAlert: test.lukas\nTags: host=muffin,service=lukas\nId: dd406bdce72df2e8c69b5ee396126a7ed8f3bf44"
                 title: "Slience is active."
                 title_link: "http://localhost:18070/silence"
               }
