@@ -14,6 +14,59 @@ wait_time = 20
 
 customMessages = []
 
+describe 'bosun without authorization', ->
+  beforeEach ->
+    process.env.HUBOT_BOSUN_HOST = "http://localhost:18070"
+    process.env.HUBOT_BOSUN_SLACK = "no"
+    process.env.HUBOT_BOSUN_LOG_LEVEL = "error"
+    process.env.HUBOT_BOSUN_RELATIVE_TIME = "no"
+
+    helper = new Helper('../src/bosun.coffee')
+    @room = helper.createRoom()
+
+    @bosun = mock_bosun()
+    @bosun.listen(18070, "127.0.0.1")
+
+
+  afterEach ->
+    @room.destroy()
+    @bosun.close()
+    # Force reload of module under test
+    delete require.cache[require.resolve('../src/bosun')]
+
+  context "incidents", ->
+
+    context "show incidents", ->
+
+      context "show incidents for authorized user", ->
+        beforeEach ->
+          co =>
+            yield @room.user.say 'alice', '@hubot show open bosun incidents'
+            yield new Promise.delay(wait_time)
+
+        it 'show bosun incidents', ->
+          expect(@room.messages).to.eql [
+            ['alice', '@hubot show open bosun incidents']
+            ['hubot', '@alice Retrieving Bosun incidents ...']
+            ['hubot', '@alice Yippie. Done.']
+            ['hubot', '@alice So, there are currently 2 open incidents in Bosun.']
+            ['hubot', '@alice 750 is warning: warning: <no value>.']
+            ['hubot', '@alice 759 is normal: warning: <no value>.']
+          ]
+
+      context "succeed even if unauthorized", ->
+        it 'show open bosun incidents for unauthorized bob', ->
+          @room.user.say('bob', '@hubot show open bosun incidents').then =>
+            expect(@room.messages).to.eql [
+              ['bob', '@hubot show open bosun incidents']
+              ['hubot', '@bob Retrieving Bosun incidents ...']
+              ['hubot', '@bob Yippie. Done.']
+              ['hubot', '@bob So, there are currently 2 open incidents in Bosun.']
+              ['hubot', '@bob 750 is warning: warning: <no value>.']
+              ['hubot', '@bob 759 is normal: warning: <no value>.']
+            ]
+
+
 describe 'bosun', ->
   beforeEach ->
     process.env.HUBOT_BOSUN_HOST = "http://localhost:18070"

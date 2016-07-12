@@ -10,8 +10,8 @@
 #   HUBOT_BOSUN_RELATIVE_TIME -- If 'yes' all dates and times are presented relatively to now.
 #
 # Commands:
-#   show open bosun incidents - shows all open incidents, unacked and acked, sorted by incident id
-#   <ack|close> bosun incident[s] <Id,...> because <message> - acks or closes bosun incidents with the specific incident ids
+#   show open bosun incidents -- shows all open incidents, unacked and acked, sorted by incident id
+#   <ack|close> bosun incident[s] <Id,...> because <message> -- acks or closes bosun incidents with the specific incident ids
 #   show bosun silences -- shows all active silences
 #   <set|test> bosun silence for [alert=<alert name>,[tag=value,...]] for <duration> because <message> -- sets or tests a new silence, e.g., set bosun silence for alert=test.lukas,host=muffin for 1h because I want to.
 #   clear bosun silence <id> -- deletes silence with the specific silence id
@@ -37,7 +37,7 @@ moment = require 'moment'
 
 config =
   host: process.env.HUBOT_BOSUN_HOST
-  role: process.env.HUBOT_BOSUN_ROLE or "bosun"
+  role: process.env.HUBOT_BOSUN_ROLE or ""
   slack: process.env.HUBOT_BOSUN_SLACK is "yes"
   log_level: process.env.HUBOT_BOSUN_LOG_LEVEL or "info"
   timeout: if process.env.HUBOT_BOSUN_TIMEOUT then parseInt process.env.HUBOT_BOSUN_TIMEOUT else 10000
@@ -338,12 +338,12 @@ module.exports = (robot) ->
 
 
 is_authorized = (robot, res) ->
-  user = res.envelope.user
-  unless robot.auth.hasRole(user, config.role)
-    warn_unauthorized res
-    false
-  else
-    true
+  unless config.role is ""
+    user = res.envelope.user
+    unless robot.auth.hasRole(user, config.role)
+      warn_unauthorized res
+      return false
+  true
 
 warn_unauthorized = (res) ->
   user = res.envelope.user.name
