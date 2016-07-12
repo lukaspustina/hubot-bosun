@@ -45,13 +45,9 @@ config =
 
 logger = new Log config.log_level
 
-logger.notice "hubot-bosun: Version #{process.env.npm_package_version} started with Bosun server #{config.host}, Slack #{if config.slack then 'en' else 'dis'}abled, timeout set to #{config.timeout}, and log level #{config.log_level}."
+logger.notice "hubot-bosun: Started with Bosun server #{config.host}, Slack #{if config.slack then 'en' else 'dis'}abled, timeout set to #{config.timeout}, and log level #{config.log_level}."
 
 module.exports = (robot) ->
-
-  robot.respond /show bosun version/i, (res) ->
-    if is_authorized robot, res
-      res.reply "hubot-bosun module version is #{process.env.npm_package_version}."
 
   robot.respond /show open bosun incidents/i, (res) ->
     if is_authorized robot, res
