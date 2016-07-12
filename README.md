@@ -2,7 +2,9 @@
 
 [![Build Status](https://travis-ci.org/lukaspustina/hubot-bosun.svg?branch=master)](https://travis-ci.org/lukaspustina/hubot-bosun)
 
-Allows hubot to interact with Bosun.
+[![NPM](https://nodei.co/npm/hubot-bosun.png)](https://nodei.co/npm/hubot-bosun/)
+
+Allows [Hubot](ihttps://hubot.github.com) to interact with [Bosun](http://bosun.org).
 
 See [`src/bosun.coffee`](src/bosun.coffee) for full documentation.
 
