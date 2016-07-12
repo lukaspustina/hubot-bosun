@@ -1,38 +1,27 @@
 Helper = require('hubot-test-helper')
 chai = require 'chai'
 auth = require 'hubot-auth'
-
 Promise = require('bluebird')
 co = require('co')
-expect = chai.expect
-
 http = require 'http'
 
+expect = chai.expect
+
 process.env.EXPRESS_PORT = 18080
-
-wait_time = 20
-
+api_call_delay = 20
 customMessages = []
 
 describe 'bosun without authorization', ->
   beforeEach ->
-    process.env.HUBOT_BOSUN_HOST = "http://localhost:18070"
-    process.env.HUBOT_BOSUN_SLACK = "no"
-    process.env.HUBOT_BOSUN_LOG_LEVEL = "error"
-    process.env.HUBOT_BOSUN_RELATIVE_TIME = "no"
-
-    helper = new Helper('../src/bosun.coffee')
-    @room = helper.createRoom()
-
-    @bosun = mock_bosun()
-    @bosun.listen(18070, "127.0.0.1")
-
+    [@room, @bosun] = setup_test_env {
+      hubot_bosun_host: "http://localhost:18070"
+      hubot_bosun_slack: "no"
+      hubot_bosun_log_level: "error"
+      hubot_bosun_relaTive_time: "no"
+    }
 
   afterEach ->
-    @room.destroy()
-    @bosun.close()
-    # Force reload of module under test
-    delete require.cache[require.resolve('../src/bosun')]
+    tear_down_test_env(@room, @bosun)
 
   context "incidents", ->
 
@@ -42,7 +31,7 @@ describe 'bosun without authorization', ->
         beforeEach ->
           co =>
             yield @room.user.say 'alice', '@hubot show open bosun incidents'
-            yield new Promise.delay(wait_time)
+            yield new Promise.delay api_call_delay
 
         it 'show bosun incidents', ->
           expect(@room.messages).to.eql [
@@ -69,25 +58,16 @@ describe 'bosun without authorization', ->
 
 describe 'bosun', ->
   beforeEach ->
-    process.env.HUBOT_BOSUN_HOST = "http://localhost:18070"
-    process.env.HUBOT_BOSUN_ROLE = "bosun"
-    process.env.HUBOT_BOSUN_SLACK = "no"
-    process.env.HUBOT_BOSUN_LOG_LEVEL = "error"
-    process.env.HUBOT_BOSUN_RELATIVE_TIME = "no"
-
-    helper = new Helper('../src/bosun.coffee')
-    @room = helper.createRoom()
-    @room.robot.auth = new MockAuth
-
-    @bosun = mock_bosun()
-    @bosun.listen(18070, "127.0.0.1")
-
+    [@room, @bosun] = setup_test_env {
+      hubot_bosun_host: "http://localhost:18070"
+      hubot_bosun_role: "bosun"
+      hubot_bosun_slack: "no"
+      hubot_bosun_log_level: "error"
+      hubot_bosun_relaTive_time: "no"
+    }
 
   afterEach ->
-    @room.destroy()
-    @bosun.close()
-    # Force reload of module under test
-    delete require.cache[require.resolve('../src/bosun')]
+    tear_down_test_env(@room, @bosun)
 
   context "incidents", ->
 
@@ -97,7 +77,7 @@ describe 'bosun', ->
         beforeEach ->
           co =>
             yield @room.user.say 'alice', '@hubot show open bosun incidents'
-            yield new Promise.delay(wait_time)
+            yield new Promise.delay api_call_delay
 
         it 'show bosun incidents', ->
           expect(@room.messages).to.eql [
@@ -123,7 +103,7 @@ describe 'bosun', ->
         beforeEach ->
           co =>
             yield @room.user.say 'alice', '@hubot ack bosun incident 123 because it is normal again.'
-            yield new Promise.delay(wait_time)
+            yield new Promise.delay api_call_delay
 
         it 'ack bosun alarm', ->
           expect(@room.messages).to.eql [
@@ -136,7 +116,7 @@ describe 'bosun', ->
         beforeEach ->
           co =>
             yield @room.user.say 'alice', '@hubot ack bosun incident 321 because it is normal again.'
-            yield new Promise.delay(wait_time)
+            yield new Promise.delay api_call_delay
 
         it 'ack bosun alarm', ->
           expect(@room.messages).to.eql [
@@ -149,7 +129,7 @@ describe 'bosun', ->
         beforeEach ->
           co =>
             yield @room.user.say 'alice', '@hubot Ack bosun incident 123 because it is normal again.'
-            yield new Promise.delay(wait_time)
+            yield new Promise.delay api_call_delay
 
         it 'ack bosun alarm', ->
           expect(@room.messages).to.eql [
@@ -162,7 +142,7 @@ describe 'bosun', ->
         beforeEach ->
           co =>
             yield @room.user.say 'alice', '@hubot ack bosun incidents 123,234 because State is normal again.'
-            yield new Promise.delay(wait_time)
+            yield new Promise.delay api_call_delay
 
         it 'ack bosun alarms', ->
           expect(@room.messages).to.eql [
@@ -170,10 +150,6 @@ describe 'bosun', ->
             ['hubot', '@alice Trying to ack Bosun incidents 123,234 ...']
             ['hubot', '@alice Yippie. Done.']
           ]
-
-       context "Other ack and close alarms", ->
-
-        it 'fail to close active bosun alarm'
 
        context "Fail if unauthorized", ->
         it 'ack bosun incident for unauthorized bob', ->
@@ -191,7 +167,7 @@ describe 'bosun', ->
         beforeEach ->
           co =>
             yield @room.user.say 'alice', '@hubot show bosun silences'
-            yield new Promise.delay(wait_time)
+            yield new Promise.delay api_call_delay
 
         it 'show bosun silences', ->
           expect(@room.messages).to.eql [
@@ -218,7 +194,7 @@ describe 'bosun', ->
         beforeEach ->
           co =>
             yield @room.user.say 'alice', '@hubot test bosun silence for alert=test.lukas,host=muffin,service=lukas for 1h because Deployment.'
-            yield new Promise.delay(wait_time)
+            yield new Promise.delay api_call_delay
 
         it 'test bosun silences', ->
           expect(@room.messages).to.eql [
@@ -231,7 +207,7 @@ describe 'bosun', ->
         beforeEach ->
           co =>
             yield @room.user.say 'alice', '@hubot test bosun silence for alert=test.fail,host=muffin,service=lukas for 1h because Deployment'
-            yield new Promise.delay(wait_time)
+            yield new Promise.delay api_call_delay
 
         it 'test bosun silence', ->
           expect(@room.messages).to.eql [
@@ -244,7 +220,7 @@ describe 'bosun', ->
         beforeEach ->
           co =>
             yield @room.user.say 'alice', '@hubot test bosun silence for alert=test.lukas for 1h because Deployment.'
-            yield new Promise.delay(wait_time)
+            yield new Promise.delay api_call_delay
 
         it 'test bosun silences', ->
           expect(@room.messages).to.eql [
@@ -257,7 +233,7 @@ describe 'bosun', ->
         beforeEach ->
           co =>
             yield @room.user.say 'alice', '@hubot test bosun silence for host=muffin,service=lukas for 1h because Deployment.'
-            yield new Promise.delay(wait_time)
+            yield new Promise.delay api_call_delay
 
         it 'test bosun silences', ->
           expect(@room.messages).to.eql [
@@ -270,7 +246,7 @@ describe 'bosun', ->
         beforeEach ->
           co =>
             yield @room.user.say 'alice', '@hubot set bosun silence for alert=test.lukas,host=muffin,service=lukas for 1h because Deployment.'
-            yield new Promise.delay(wait_time)
+            yield new Promise.delay api_call_delay
 
         it 'set bosun silences', ->
           expect(@room.messages).to.eql [
@@ -283,7 +259,7 @@ describe 'bosun', ->
         beforeEach ->
           co =>
             yield @room.user.say 'alice', '@hubot set bosun silence for alert=test.lukas for 1h because Deployment.'
-            yield new Promise.delay(wait_time)
+            yield new Promise.delay api_call_delay
 
         it 'set bosun silences', ->
           expect(@room.messages).to.eql [
@@ -296,7 +272,7 @@ describe 'bosun', ->
         beforeEach ->
           co =>
             yield @room.user.say 'alice', '@hubot set bosun silence for host=muffin,service=lukas for 1h because Deployment.'
-            yield new Promise.delay(wait_time)
+            yield new Promise.delay api_call_delay
 
         it 'set bosun silences', ->
           expect(@room.messages).to.eql [
@@ -320,7 +296,7 @@ describe 'bosun', ->
         beforeEach ->
           co =>
             yield @room.user.say 'alice', '@hubot clear bosun silence 6e89533c74c3f9b74417b37e7cce75c384d29dc7'
-            yield new Promise.delay(wait_time)
+            yield new Promise.delay api_call_delay
 
         it 'clear bosun silence', ->
           expect(@room.messages).to.eql [
@@ -333,7 +309,7 @@ describe 'bosun', ->
         beforeEach ->
           co =>
             yield @room.user.say 'alice', '@hubot clear bosun silence xxx9533c74c3f9b74417b37e7cce75c384d29dc7'
-            yield new Promise.delay(wait_time)
+            yield new Promise.delay api_call_delay
 
         it 'clear silence', ->
           expect(@room.messages).to.eql [
@@ -351,39 +327,21 @@ describe 'bosun', ->
               ['hubot', "@bob Sorry, you're not allowed to do that. You need the 'bosun' role."]
             ]
 
-
-  context "error handling", ->
-
-      it 'Catch errors'
-
-  context "show config", ->
-
-      it 'show bosun config'
-
-
 describe 'bosun with Slack', ->
   beforeEach ->
-    process.env.HUBOT_BOSUN_HOST = "http://localhost:18070"
-    process.env.HUBOT_BOSUN_ROLE = "bosun"
-    process.env.HUBOT_BOSUN_SLACK = "yes"
-    process.env.HUBOT_BOSUN_LOG_LEVEL = "error"
-    process.env.HUBOT_BOSUN_RELATIVE_TIME = "no"
-
-    helper = new Helper('../src/bosun.coffee')
-    @room = helper.createRoom()
-    @room.robot.auth = new MockAuth
+    [@room, @bosun] = setup_test_env {
+      hubot_bosun_host: "http://localhost:18070"
+      hubot_bosun_role: "bosun"
+      hubot_bosun_slack: "yes"
+      hubot_bosun_log_level: "error"
+      hubot_bosun_relaTive_time: "no"
+    }
     customMessages = []
-    @room.robot.adapter.customMessage = slack_custom_message
-
-    @bosun = mock_bosun()
-    @bosun.listen(18070, "127.0.0.1")
+    @room.robot.adapter.customMessage = (msg) -> customMessages.push msg
 
 
   afterEach ->
-    @room.destroy()
-    @bosun.close()
-    # Force reload of module under test
-    delete require.cache[require.resolve('../src/bosun')]
+    tear_down_test_env(@room, @bosun)
 
   context "incidents", ->
 
@@ -393,7 +351,7 @@ describe 'bosun with Slack', ->
         beforeEach ->
           co =>
             yield @room.user.say 'alice', '@hubot show open bosun incidents'
-            yield new Promise.delay(wait_time)
+            yield new Promise.delay api_call_delay
 
         it 'show bosun incidents', ->
           expect(@room.messages).to.eql [
@@ -427,7 +385,7 @@ describe 'bosun with Slack', ->
         beforeEach ->
           co =>
             yield @room.user.say 'alice', '@hubot ack bosun incident 321 because it is normal again.'
-            yield new Promise.delay(wait_time)
+            yield new Promise.delay api_call_delay
 
         it 'ack bosun alarm', ->
           expect(@room.messages).to.eql [
@@ -454,7 +412,7 @@ describe 'bosun with Slack', ->
         beforeEach ->
           co =>
             yield @room.user.say 'alice', '@hubot show bosun silences'
-            yield new Promise.delay(wait_time)
+            yield new Promise.delay api_call_delay
 
         it 'show bosun silences', ->
           expect(@room.messages).to.eql [
@@ -489,7 +447,7 @@ describe 'bosun with Slack', ->
         beforeEach ->
           co =>
             yield @room.user.say 'alice', '@hubot test bosun silence for alert=test.lukas,host=muffin,service=lukas for 1h because Deployment.'
-            yield new Promise.delay(wait_time)
+            yield new Promise.delay api_call_delay
 
         it 'test bosun silences', ->
           expect(@room.messages).to.eql [
@@ -502,7 +460,7 @@ describe 'bosun with Slack', ->
         beforeEach ->
           co =>
             yield @room.user.say 'alice', '@hubot test bosun silence for alert=test.fail,host=muffin,service=lukas for 1h because Deployment'
-            yield new Promise.delay(wait_time)
+            yield new Promise.delay api_call_delay
 
         it 'test silence', ->
           expect(@room.messages).to.eql [
@@ -528,7 +486,7 @@ describe 'bosun with Slack', ->
         beforeEach ->
           co =>
             yield @room.user.say 'alice', '@hubot clear bosun silence 6e89533c74c3f9b74417b37e7cce75c384d29dc7'
-            yield new Promise.delay(wait_time)
+            yield new Promise.delay api_call_delay
 
         it 'clear bosun silence', ->
           expect(@room.messages).to.eql [
@@ -541,7 +499,7 @@ describe 'bosun with Slack', ->
         beforeEach ->
           co =>
             yield @room.user.say 'alice', '@hubot clear bosun silence xxx9533c74c3f9b74417b37e7cce75c384d29dc7'
-            yield new Promise.delay(wait_time)
+            yield new Promise.delay api_call_delay
 
         it 'clear bosun silence', ->
           expect(@room.messages).to.eql [
@@ -562,7 +520,27 @@ describe 'bosun with Slack', ->
           }
 
 
+setup_test_env = ( env ) ->
+  process.env.HUBOT_BOSUN_HOST = env.hubot_bosun_host
+  process.env.HUBOT_BOSUN_ROLE = env.hubot_bosun_role or ""
+  process.env.HUBOT_BOSUN_SLACK = env.hubot_bosun_slack
+  process.env.HUBOT_BOSUN_LOG_LEVEL = env.hubot_bosun_log_level
+  process.env.HUBOT_BOSUN_RELATIVE_TIME = env.hubot_bosun_relaTive_time
 
+  helper = new Helper('../src/bosun.coffee')
+  room = helper.createRoom()
+  room.robot.auth = new MockAuth
+
+  bosun = mock_bosun()
+  bosun.listen(18070, "127.0.0.1")
+
+  [room, bosun]
+
+tear_down_test_env = (room, bosun) ->
+  room.destroy()
+  bosun.close()
+  # Force reload of module under test
+  delete require.cache[require.resolve('../src/bosun')]
 
 
 class MockAuth
@@ -689,5 +667,4 @@ mock_bosun = () ->
 
     )
 
-slack_custom_message = (msg) ->
-  customMessages.push msg
+
