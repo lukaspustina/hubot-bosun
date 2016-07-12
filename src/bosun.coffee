@@ -24,8 +24,11 @@
 #
 # Todos:
 #   * TODO: Fix Todos
-#   (*) Listen for events
+#   * Listen for events
 #     * bosun:silence x - starts silence for x min
+#   * Extend documentation
+#     * Show more examples in Readme
+#     * Explain currently available commands in Readme
 #   (*) Graph queries
 
 request = require 'request'
