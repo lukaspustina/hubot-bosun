@@ -36,6 +36,23 @@ describe 'bosun', ->
     # Force reload of module under test
     delete require.cache[require.resolve('../src/bosun')]
 
+  context "version", ->
+
+    context "show version", ->
+
+      context "show version for authorized user", ->
+        version = require('../package.json').version
+        beforeEach ->
+          co =>
+            yield @room.user.say 'alice', '@hubot show bosun version'
+            yield new Promise.delay(wait_time)
+
+        it 'show bosun incidents', ->
+          expect(@room.messages).to.eql [
+            ['alice', '@hubot show bosun version']
+            ['hubot', "@alice hubot-bosun module version is #{version}."]
+          ]
+
   context "incidents", ->
 
     context "show incidents", ->
