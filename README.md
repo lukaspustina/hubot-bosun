@@ -4,7 +4,7 @@
 
 [![NPM](https://nodei.co/npm/hubot-bosun.png)](https://nodei.co/npm/hubot-bosun/)
 
-Allows [Hubot](ihttps://hubot.github.com) to interact with [Bosun](http://bosun.org).
+Allows [Hubot](https://hubot.github.com) to interact with [Bosun](http://bosun.org).
 
 See [`src/bosun.coffee`](src/bosun.coffee) for full documentation.
 
