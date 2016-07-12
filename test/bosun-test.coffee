@@ -10,7 +10,7 @@ http = require 'http'
 
 process.env.EXPRESS_PORT = 18080
 
-wait_time = 5
+wait_time = 20
 
 customMessages = []
 
