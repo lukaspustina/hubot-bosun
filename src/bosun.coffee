@@ -137,7 +137,7 @@ module.exports = (robot) ->
             when 500 then "Bosun couldn't deal with that; maybe the incident doesn't exists or is still active? I suggest, you list the now open incidents. That's what Bosun told me: ```\n#{body}\n```"
             else "Puh, no sure what happened. I asked Bosun politely, but I got a weird answer. Bosun said '#{body}'."
 
-          unless config.slack or response.statusCode is not 200
+          if not config.slack or response.statusCode is 200
             res.reply answer
           else
             robot.adapter.customMessage {
@@ -278,7 +278,7 @@ module.exports = (robot) ->
             when 500 then "Bosun couldn't deal with that. I suggest, you list the active silences now. That's what Bosun told me: ```\n#{body}\n```"
             else "Puh, no sure what happened. I asked Bosun politely, but I got a weird answer. Bosun said '#{body}'."
 
-          unless config.slack or response.statusCode is not 200
+          if not config.slack or response.statusCode is 200
             res.reply answer
           else
             robot.adapter.customMessage {
@@ -314,7 +314,7 @@ module.exports = (robot) ->
             else "Puh, no sure what happened. I asked Bosun politely, but I got a weird answer. Bosun said '#{body}'."
 
 
-          unless config.slack or response.statusCode is not 200
+          if not config.slack or response.statusCode is 200
             res.reply answer
           else
             robot.adapter.customMessage {

@@ -56,8 +56,7 @@ describe 'bosun', ->
             ['hubot', '@alice 759 is normal: warning: <no value>.']
           ]
 
-       context "Fail if unauthorized", ->
-
+      context "Fail if unauthorized", ->
         it 'show open bosun incidents for unauthorized bob', ->
           @room.user.say('bob', '@hubot show open bosun incidents').then =>
             expect(@room.messages).to.eql [
@@ -112,7 +111,7 @@ describe 'bosun', ->
             yield @room.user.say 'alice', '@hubot ack bosun incidents 123,234 because State is normal again.'
             yield new Promise.delay(wait_time)
 
-        it 'ack bosun alarm', ->
+        it 'ack bosun alarms', ->
           expect(@room.messages).to.eql [
             ['alice', '@hubot ack bosun incidents 123,234 because State is normal again.']
             ['hubot', '@alice Trying to ack Bosun incidents 123,234 ...']
@@ -181,7 +180,7 @@ describe 'bosun', ->
             yield @room.user.say 'alice', '@hubot test bosun silence for alert=test.fail,host=muffin,service=lukas for 1h because Deployment'
             yield new Promise.delay(wait_time)
 
-        it 'ack bosun alarm', ->
+        it 'test bosun silence', ->
           expect(@room.messages).to.eql [
             ['alice', '@hubot test bosun silence for alert=test.fail,host=muffin,service=lukas for 1h because Deployment']
             ['hubot', "@alice Trying to test Bosun silence for alert 'test.fail' and tags {host:muffin,service:lukas} for 1h ..."]
@@ -240,7 +239,7 @@ describe 'bosun', ->
             ['hubot', '@alice Yippie. Done. Admire your alarm at http://localhost:18070/silence.']
           ]
 
-      context "test silence with tags only for authorized user", ->
+      context "set silence with tags only for authorized user", ->
         beforeEach ->
           co =>
             yield @room.user.say 'alice', '@hubot set bosun silence for host=muffin,service=lukas for 1h because Deployment.'
@@ -283,7 +282,7 @@ describe 'bosun', ->
             yield @room.user.say 'alice', '@hubot clear bosun silence xxx9533c74c3f9b74417b37e7cce75c384d29dc7'
             yield new Promise.delay(wait_time)
 
-        it 'ack bosun alarm', ->
+        it 'clear silence', ->
           expect(@room.messages).to.eql [
             ['alice', '@hubot clear bosun silence xxx9533c74c3f9b74417b37e7cce75c384d29dc7']
             ['hubot', '@alice Trying to clear Bosun silence xxx9533c74c3f9b74417b37e7cce75c384d29dc7 ...']
@@ -395,6 +394,7 @@ describe 'bosun with Slack', ->
             ]
           }
 
+
   context "silences", ->
 
       context "show silences for authorized user", ->
@@ -432,13 +432,26 @@ describe 'bosun with Slack', ->
             ]
           }
 
+      context "test silence with alert and tags for authorized user", ->
+        beforeEach ->
+          co =>
+            yield @room.user.say 'alice', '@hubot test bosun silence for alert=test.lukas,host=muffin,service=lukas for 1h because Deployment.'
+            yield new Promise.delay(wait_time)
+
+        it 'test bosun silences', ->
+          expect(@room.messages).to.eql [
+            ['alice', '@hubot test bosun silence for alert=test.lukas,host=muffin,service=lukas for 1h because Deployment.']
+            ['hubot', "@alice Trying to test Bosun silence for alert 'test.lukas' and tags {host:muffin,service:lukas} for 1h ..."]
+            ['hubot', '@alice Yippie. Done. That alarm will work.']
+          ]
+
       context "fail to test silence with alert and tags for authorized use", ->
         beforeEach ->
           co =>
             yield @room.user.say 'alice', '@hubot test bosun silence for alert=test.fail,host=muffin,service=lukas for 1h because Deployment'
             yield new Promise.delay(wait_time)
 
-        it 'ack bosun alarm', ->
+        it 'test silence', ->
           expect(@room.messages).to.eql [
             ['alice', '@hubot test bosun silence for alert=test.fail,host=muffin,service=lukas for 1h because Deployment']
             ['hubot', "@alice Trying to test Bosun silence for alert 'test.fail' and tags {host:muffin,service:lukas} for 1h ..."]
@@ -456,13 +469,28 @@ describe 'bosun with Slack', ->
             ]
           }
 
-       context "fail to clear silence for authorized user", ->
+    context "clear silences", ->
+
+      context "clear silence for authorized user", ->
+        beforeEach ->
+          co =>
+            yield @room.user.say 'alice', '@hubot clear bosun silence 6e89533c74c3f9b74417b37e7cce75c384d29dc7'
+            yield new Promise.delay(wait_time)
+
+        it 'clear bosun silence', ->
+          expect(@room.messages).to.eql [
+            ['alice', '@hubot clear bosun silence 6e89533c74c3f9b74417b37e7cce75c384d29dc7']
+            ['hubot', '@alice Trying to clear Bosun silence 6e89533c74c3f9b74417b37e7cce75c384d29dc7 ...']
+            ['hubot', '@alice Yippie. Done.']
+          ]
+
+      context "fail to clear silence for authorized user", ->
         beforeEach ->
           co =>
             yield @room.user.say 'alice', '@hubot clear bosun silence xxx9533c74c3f9b74417b37e7cce75c384d29dc7'
             yield new Promise.delay(wait_time)
 
-        it 'ack bosun alarm', ->
+        it 'clear bosun silence', ->
           expect(@room.messages).to.eql [
             ['alice', '@hubot clear bosun silence xxx9533c74c3f9b74417b37e7cce75c384d29dc7']
             ['hubot', '@alice Trying to clear Bosun silence xxx9533c74c3f9b74417b37e7cce75c384d29dc7 ...']
