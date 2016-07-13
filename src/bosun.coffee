@@ -23,12 +23,9 @@
 #   lukas.pustina@gmail.com
 #
 # Todos:
-#   * TODO: Fix Todos
+#   * Make Base Link URL configurable
 #   * Listen for events
 #     * bosun:silence x - starts silence for x min
-#   * Extend documentation
-#     * Show more examples in Readme
-#     * Explain currently available commands in Readme
 #   (*) Graph queries
 
 request = require 'request'
@@ -189,8 +186,7 @@ module.exports = (robot) ->
               start = format_date_str s.Start
               end = format_date_str s.End
 
-              # TODO: Check if silence is still active
-              is_active = true
+              is_active = moment(s.End).isBefore moment()
 
               color = switch is_active
                 when true then 'danger'
@@ -207,7 +203,6 @@ module.exports = (robot) ->
                 fallback: "Slience #{id} is #{if is_active then "active" else "inactive"}."
                 color: color
                 title: "Slience is #{if is_active then "active" else "inactive"}."
-                # TODO: Make this an edit link
                 title_link: "#{config.host}/silence"
                 text: text
                 mrkdwn_in: ["text"]
