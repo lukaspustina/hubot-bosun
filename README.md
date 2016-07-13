@@ -10,7 +10,7 @@ See [`src/bosun.coffee`](src/bosun.coffee) for full documentation.
 
 ## Installation
 
-In hubot project repo, run:
+In the hubot project repo, run:
 
 `npm install hubot-bosun --save`
 
@@ -24,14 +24,14 @@ Then add **hubot-bosun** to your `external-scripts.json`:
 
 ## Configuration
 
-**hubot-bosun** may be used with [hubot-auth](https://github.com/hubot-scripts/hubot-auth) and configure via the following environment variables:
+**hubot-bosun** may be used with [hubot-auth](https://github.com/hubot-scripts/hubot-auth) and can be configured via the following environment variables:
 
 * `HUBOT_BOSUN_HOST="http://192.168.99.100:8070"` Bosun server URL
 * `HUBOT_BOSUN_LINK_URL="http://example.com:8070"` If set, this URL will be used for links instead of `HUBOT_BOSUN_HOST`
 * `HUBOT_BOSUN_ROLE="bosun"` If set, auth role required to interact with Bosun
-* `HUBOT_BOSUN_SLACK="yes"` If yes, use rich formatting for slack
+* `HUBOT_BOSUN_SLACK="yes"` If yes, use rich formatting for Slack
 * `HUBOT_BOSUN_LOG_LEVEL="info"` Log level; defaults to `info`
-* `HUBOT_BOSUN_TIMEOUT="10000"` Timeout for Bosun API calls; default to 10.000 ms
+* `HUBOT_BOSUN_TIMEOUT="10000"` Timeout for Bosun API calls; defaults to 10.000 ms
 * `HUBOT_BOSUN_RELATIVE_TIME="yes"` If yes, use relative timestamps like "2 min ago"
 
 ## Commands
@@ -39,12 +39,12 @@ Then add **hubot-bosun** to your `external-scripts.json`:
 ### Incidents
 
 * `show open bosun incidents` shows all open incidents, unacked and acked, sorted by incident id
-* `<ack|close> bosun incident[s] <Id,...> because <message>` acks or closes bosun incidents with the specific incident ids
+* `<ack|close> bosun incident[s] <Id,...> because <message>` acks or closes bosun incidents with the specified incident ids
 
 ### Silences
 
 * `show bosun silences` shows all active silences
-* `<set|test> bosun silence for [alert=<alert name>,[tag=value,...]] for <duration> because <message>` sets or tests a new silence, e.g., set bosun silence for alert=test.lukas,host=muffin for 1h because I want to. Can also be used with alert or tags only.
+* `<set|test> bosun silence for <alert|tagkey>=value[,...] for <duration> because <message>` sets or tests a new silence, e.g., `set bosun silence for alert=test.lukas,host=muffin for 1h because I want to`. Can also be used with alert or tags only.
 * `clear bosun silence <id>` deletes silence with the specific silence id
 
 
