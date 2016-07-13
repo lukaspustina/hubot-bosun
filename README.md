@@ -27,6 +27,7 @@ Then add **hubot-bosun** to your `external-scripts.json`:
 **hubot-bosun** may be used with [hubot-auth](https://github.com/hubot-scripts/hubot-auth) and configure via the following environment variables:
 
 * `HUBOT_BOSUN_HOST="http://192.168.99.100:8070"` Bosun server URL
+* `HUBOT_BOSUN_LINK_URL="http://example.com:8070"` If set, this URL will be used for links instead of `HUBOT_BOSUN_HOST`
 * `HUBOT_BOSUN_ROLE="bosun"` If set, auth role required to interact with Bosun
 * `HUBOT_BOSUN_SLACK="yes"` If yes, use rich formatting for slack
 * `HUBOT_BOSUN_LOG_LEVEL="info"` Log level; defaults to `info`

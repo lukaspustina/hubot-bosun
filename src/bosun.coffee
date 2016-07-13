@@ -2,11 +2,12 @@
 #   Allows hubot to interact with Bosun.
 #
 # Configuration:
-#   HUBOT_BOSUN_HOST - Bosun host, e.g., http://localhost:8070
-#   HUBOT_BOSUN_ROLE - Hubot auth role, default is 'bosun'
-#   HUBOT_BOSUN_SLACK - If 'yes' enables rich text formatting for Slack, default 'no'
-#   HUBOT_BOSUN_LOG_LEVEL - Log level, default 'info'
-#   HUBOT_BOSUN_TIMEOUT - Timeout for calls to Bosun host, defauult is 10.000 ms
+#   HUBOT_BOSUN_HOST -- Bosun host, e.g., http://localhost:8070
+#   HUBOT_BOSUN_LINK_URL -- If set, this URL will be used for links instead of HUBOT_BOSUN_HOST
+#   HUBOT_BOSUN_ROLE -- Hubot auth role, default is 'bosun'
+#   HUBOT_BOSUN_SLACK -- If 'yes' enables rich text formatting for Slack, default 'no'
+#   HUBOT_BOSUN_LOG_LEVEL -- Log level, default 'info'
+#   HUBOT_BOSUN_TIMEOUT -- Timeout for calls to Bosun host, defauult is 10.000 ms
 #   HUBOT_BOSUN_RELATIVE_TIME -- If 'yes' all dates and times are presented relatively to now.
 #
 # Commands:
@@ -23,7 +24,6 @@
 #   lukas.pustina@gmail.com
 #
 # Todos:
-#   * Make Base Link URL configurable
 #   * Listen for events
 #     * bosun:silence x - starts silence for x min
 #   (*) Graph queries
@@ -34,6 +34,7 @@ moment = require 'moment'
 
 config =
   host: process.env.HUBOT_BOSUN_HOST
+  link_url: process.env.HUBOT_BOSUN_LINK_URL or process.env.HUBOT_BOSUN_HOST
   role: process.env.HUBOT_BOSUN_ROLE or ""
   slack: process.env.HUBOT_BOSUN_SLACK is "yes"
   log_level: process.env.HUBOT_BOSUN_LOG_LEVEL or "info"
@@ -42,7 +43,7 @@ config =
 
 logger = new Log config.log_level
 
-logger.notice "hubot-bosun: Started with Bosun server #{config.host}, Slack #{if config.slack then 'en' else 'dis'}abled, timeout set to #{config.timeout}, and log level #{config.log_level}."
+logger.notice "hubot-bosun: Started with Bosun server #{config.host}, link URL #{config.link_url}, Slack #{if config.slack then 'en' else 'dis'}abled, timeout set to #{config.timeout}, and log level #{config.log_level}."
 
 module.exports = (robot) ->
 
@@ -94,7 +95,7 @@ module.exports = (robot) ->
                 fallback: "Incident #{i.Id} is #{i.CurrentStatus}"
                 color: color
                 title: "#{i.Id}: #{i.Subject}"
-                title_link: "#{config.host}/incident?id=#{i.Id}"
+                title_link: "#{config.link_url}/incident?id=#{i.Id}"
                 text: text
                 mrkdwn_in: ["text"]
               }
@@ -203,7 +204,7 @@ module.exports = (robot) ->
                 fallback: "Slience #{id} is #{if is_active then "active" else "inactive"}."
                 color: color
                 title: "Slience is #{if is_active then "active" else "inactive"}."
-                title_link: "#{config.host}/silence"
+                title_link: "#{config.link_url}/silence"
                 text: text
                 mrkdwn_in: ["text"]
               }
