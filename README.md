@@ -28,11 +28,11 @@ Then add **hubot-bosun** to your `external-scripts.json`:
 
 * `HUBOT_BOSUN_HOST` -- Bosun server URL, e.g., `http://localhost:8070`
 * `HUBOT_BOSUN_LINK_URL` -- If set, this URL will be used for links instead of `HUBOT_BOSUN_HOST`
-* `HUBOT_BOSUN_ROLE` -- If set, auth role required to interact with Bosun. Default is 'bosun'
-* `HUBOT_BOSUN_SLACK` -- If 'yes' enables rich text formatting for Slack, default is 'no'
-* `HUBOT_BOSUN_LOG_LEVEL` -- Log level, default is 'info'
-* `HUBOT_BOSUN_TIMEOUT` --  Timeout for Bosun API calls; default is 10.000 ms
-* `HUBOT_BOSUN_RELATIVE_TIME` -- If 'yes' all dates and times are presented relative to now, e.g. "2 min ago"
+* `HUBOT_BOSUN_ROLE` -- If set, auth role required to interact with Bosun. Default is `bosun`
+* `HUBOT_BOSUN_SLACK` -- If `yes` enables rich text formatting for Slack, default is `no`
+* `HUBOT_BOSUN_LOG_LEVEL` -- Log level, default is `info`
+* `HUBOT_BOSUN_TIMEOUT` --  Timeout for Bosun API calls in milliseconds; default is `10000`
+* `HUBOT_BOSUN_RELATIVE_TIME` -- If `yes` all dates and times are presented relative to now, e.g. _2 min ago_
 
 ### Incidents
 
