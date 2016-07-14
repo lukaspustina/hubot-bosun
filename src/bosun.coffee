@@ -2,21 +2,20 @@
 #   Allows hubot to interact with Bosun.
 #
 # Configuration:
-#   HUBOT_BOSUN_HOST -- Bosun host, e.g., http://localhost:8070
-#   HUBOT_BOSUN_LINK_URL -- If set, this URL will be used for links instead of HUBOT_BOSUN_HOST
-#   HUBOT_BOSUN_ROLE -- Hubot auth role, default is 'bosun'
-#   HUBOT_BOSUN_SLACK -- If 'yes' enables rich text formatting for Slack, default 'no'
-#   HUBOT_BOSUN_LOG_LEVEL -- Log level, default 'info'
-#   HUBOT_BOSUN_TIMEOUT -- Timeout for calls to Bosun host, defauult is 10.000 ms
-#   HUBOT_BOSUN_RELATIVE_TIME -- If 'yes' all dates and times are presented relatively to now.
-#
+#   HUBOT_BOSUN_HOST -- Bosun server URL, e.g., `http://localhost:8070`
+#   HUBOT_BOSUN_LINK_URL -- If set, this URL will be used for links instead of `HUBOT_BOSUN_HOST`
+#   HUBOT_BOSUN_ROLE -- If set, auth role required to interact with Bosun. Default is `bosun`
+#   HUBOT_BOSUN_SLACK -- If `yes` enables rich text formatting for Slack, default is `no`
+#   HUBOT_BOSUN_LOG_LEVEL -- Log level, default is `info`
+#   HUBOT_BOSUN_TIMEOUT --  Timeout for Bosun API calls in milliseconds; default is `10000`
+#   HUBOT_BOSUN_RELATIVE_TIME -- If `yes` all dates and times are presented relative to now, e.g. _2 min ago_
+
 # Commands:
 #   show open bosun incidents -- shows all open incidents, unacked and acked, sorted by incident id
 #   <ack|close> bosun incident[s] <Id,...> because <message> -- acks or closes bosun incidents with the specific incident ids
 #   show bosun silences -- shows all active silences
-#   <set|test> bosun silence for [alert=<alert name>,[tag=value,...]] for <duration> because <message> -- sets or tests a new silence, e.g., set bosun silence for alert=test.lukas,host=muffin for 1h because I want to.
+#   <set|test> bosun silence for <alert|tagkey>=value[,...] for <duration> because <message> -- sets or tests a new silence, e.g., `set bosun silence for alert=test.lukas,host=muffin for 1h because I want to`. Can also be used with alert or tags only.
 #   clear bosun silence <id> -- deletes silence with the specific silence id
-#
 # Notes:
 #   Enjoy and thank Stack Exchange for Bosun -- http://bosun.org.
 #
