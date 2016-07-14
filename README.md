@@ -26,15 +26,13 @@ Then add **hubot-bosun** to your `external-scripts.json`:
 
 **hubot-bosun** may be used with [hubot-auth](https://github.com/hubot-scripts/hubot-auth) and can be configured via the following environment variables:
 
-* `HUBOT_BOSUN_HOST="http://192.168.99.100:8070"` Bosun server URL
-* `HUBOT_BOSUN_LINK_URL="http://example.com:8070"` If set, this URL will be used for links instead of `HUBOT_BOSUN_HOST`
-* `HUBOT_BOSUN_ROLE="bosun"` If set, auth role required to interact with Bosun
-* `HUBOT_BOSUN_SLACK="yes"` If yes, use rich formatting for Slack
-* `HUBOT_BOSUN_LOG_LEVEL="info"` Log level; defaults to `info`
-* `HUBOT_BOSUN_TIMEOUT="10000"` Timeout for Bosun API calls; defaults to 10.000 ms
-* `HUBOT_BOSUN_RELATIVE_TIME="yes"` If yes, use relative timestamps like "2 min ago"
-
-## Commands
+* `HUBOT_BOSUN_HOST` -- Bosun server URL, e.g., `http://localhost:8070`
+* `HUBOT_BOSUN_LINK_URL` -- If set, this URL will be used for links instead of `HUBOT_BOSUN_HOST`
+* `HUBOT_BOSUN_ROLE` -- If set, auth role required to interact with Bosun. Default is 'bosun'
+* `HUBOT_BOSUN_SLACK` -- If 'yes' enables rich text formatting for Slack, default is 'no'
+* `HUBOT_BOSUN_LOG_LEVEL` -- Log level, default is 'info'
+* `HUBOT_BOSUN_TIMEOUT` --  Timeout for Bosun API calls; default is 10.000 ms
+* `HUBOT_BOSUN_RELATIVE_TIME` -- If 'yes' all dates and times are presented relative to now, e.g. "2 min ago"
 
 ### Incidents
 
