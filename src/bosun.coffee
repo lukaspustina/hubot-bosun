@@ -16,6 +16,7 @@
 #   show bosun silences -- shows all active silences
 #   <set|test> bosun silence for <alert|tagkey>=value[,...] for <duration> because <message> -- sets or tests a new silence, e.g., `set bosun silence for alert=test.lukas,host=muffin for 1h because I want to`. Can also be used with alert or tags only.
 #   clear bosun silence <id> -- deletes silence with the specific silence id
+#
 # Notes:
 #   Enjoy and thank Stack Exchange for Bosun -- http://bosun.org.
 #
@@ -24,7 +25,13 @@
 #
 # Todos:
 #   * Listen for events
-#     * bosun:silence x - starts silence for x min
+#     * events
+#       * bosun.set_silence
+#       * bosun.clear_silence
+#       * bosun.check_silence
+#     * Docs
+#       * Notes in this file
+#       * Readme
 #   (*) Graph queries
 
 request = require 'request'
@@ -357,3 +364,4 @@ format_date_str = (date_str) ->
     moment(date_str).fromNow()
   else
     date_str.replace(/T/, ' ').replace(/\..+/, ' UTC')
+

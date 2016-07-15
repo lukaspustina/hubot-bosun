@@ -519,6 +519,49 @@ describe 'bosun with Slack', ->
             ]
           }
 
+describe 'bosun events', ->
+  beforeEach ->
+    [@room, @bosun] = setup_test_env {
+      hubot_bosun_host: "http://localhost:18070"
+      hubot_bosun_role: "bosun"
+      hubot_bosun_slack: "no"
+      hubot_bosun_log_level: "error"
+      hubot_bosun_relaTive_time: "no"
+    }
+
+  afterEach ->
+    tear_down_test_env(@room, @bosun)
+
+  context "set_silence", ->
+
+    context "set_silence successfully", ->
+
+      it "on set_silence"
+
+    context "set_silence failed", ->
+
+      it "on set_silence"
+
+  context "clear_silence", ->
+
+    context "clear_silence successfully", ->
+
+      it "on clear_silence"
+
+    context "clear_silence failed", ->
+
+      it "on clear_silence"
+
+  context "check_silence", ->
+
+    context "clear_silence successfully", ->
+
+      it "on check_silence"
+
+    context "check_silence failed", ->
+
+      it "on check_silence"
+
 
 setup_test_env = ( env ) ->
   process.env.HUBOT_BOSUN_HOST = env.hubot_bosun_host
@@ -666,5 +709,4 @@ mock_bosun = () ->
         resp.end ""
 
     )
-
 
