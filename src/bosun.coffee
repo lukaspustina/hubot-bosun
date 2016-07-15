@@ -25,10 +25,16 @@
 #
 # Todos:
 #   * Listen for events
-#     * events
+#     * events -- receive
 #       * bosun.set_silence
 #       * bosun.clear_silence
 #       * bosun.check_silence
+#     * events -- emit
+#       * bosun.result.set_silence.success
+#       * bosun.result.set_silence.failure
+#       * bosun.result.clear_silence.success
+#       * bosun.result.clear_silence.failure
+#       * bosun.result.check_silence
 #     * Docs
 #       * Notes in this file
 #       * Readme
