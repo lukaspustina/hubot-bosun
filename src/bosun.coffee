@@ -17,6 +17,20 @@
 #   <set|test> bosun silence for <alert|tagkey>=value[,...] for <duration> because <message> -- sets or tests a new silence, e.g., `set bosun silence for alert=test.lukas,host=muffin for 1h because I want to`. Can also be used with alert or tags only.
 #   clear bosun silence <id> -- deletes silence with the specific silence id
 #
+# Events:
+#   Accepts the following events:
+#     bosun.set_silence
+#     bosun.clear_silence
+#     bosun.check_silence
+#   Emits the following events:
+#     bosun.result.set_silence.successful
+#     bosun.result.set_silence.failed
+#     bosun.result.clear_silence.successful
+#     bosun.result.clear_silence.failed
+#     bosun.result.check_silence.successful
+#     bosun.result.check_silence.failed
+#   Please see the event handlers for the specific event formats.
+#
 # Notes:
 #   Enjoy and thank Stack Exchange for Bosun -- http://bosun.org.
 #
@@ -24,10 +38,6 @@
 #   lukas.pustina@gmail.com
 #
 # Todos:
-#   * Listen for events
-#     * Docs
-#       * Notes in this file
-#       * Readme
 #   (*) Graph queries
 
 request = require 'request'

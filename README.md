@@ -34,6 +34,8 @@ Then add **hubot-bosun** to your `external-scripts.json`:
 * `HUBOT_BOSUN_TIMEOUT` --  Timeout for Bosun API calls in milliseconds; default is `10000`
 * `HUBOT_BOSUN_RELATIVE_TIME` -- If `yes` all dates and times are presented relative to now, e.g. _2 min ago_
 
+## Commands
+
 ### Incidents
 
 * `show open bosun incidents` shows all open incidents, unacked and acked, sorted by incident id
@@ -45,6 +47,23 @@ Then add **hubot-bosun** to your `external-scripts.json`:
 * `<set|test> bosun silence for <alert|tagkey>=value[,...] for <duration> because <message>` sets or tests a new silence, e.g., `set bosun silence for alert=test.lukas,host=muffin for 1h because I want to`. Can also be used with alert or tags only.
 * `clear bosun silence <id>` deletes silence with the specific silence id
 
+## Events
+
+Please see the event handlers in `src/bosun.coffee` for the specific event formats.
+
+### Accepts the following events
+
+* `bosun.set_silence`
+* `bosun.clear_silence`
+* `bosun.check_silence`
+
+###  Emits the following events
+*  `bosun.result.set_silence.successful`
+*  `bosun.result.set_silence.failed`
+*  `bosun.result.clear_silence.successful`
+*  `bosun.result.clear_silence.failed`
+*  `bosun.result.check_silence.successful`
+*  `bosun.result.check_silence.failed`
 
 ## Sample Interaction
 
