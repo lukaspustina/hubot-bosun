@@ -25,15 +25,9 @@
 #
 # Todos:
 #   * Listen for events
-#     * events -- receive
-#       * bosun.clear_silence
-#     * events -- emit
-#       * bosun.result.clear_silence.success
-#       * bosun.result.clear_silence.failure
 #     * Docs
 #       * Notes in this file
 #       * Readme
-#     * Fix TODOs
 #   (*) Graph queries
 
 request = require 'request'
@@ -56,7 +50,9 @@ logger.notice "hubot-bosun: Started with Bosun server #{config.host}, link URL #
 module.exports = (robot) ->
 
   robot.respond /show open bosun incidents/i, (res) ->
-    if is_authorized robot, res
+    unless is_authorized robot, res.envelope.user
+      warn_unauthorized res
+    else
       user_name = res.envelope.user.name
       logger.info "hubot-bosun: Retrieving Bosun incidents requested by #{user_name}."
 
@@ -116,7 +112,9 @@ module.exports = (robot) ->
       )
 
   robot.respond /(ack|close) bosun incident[s]* ([\d,]+) because (.+)/i, (res) ->
-    if is_authorized robot, res
+    unless is_authorized robot, res.envelope.user
+      warn_unauthorized res
+    else
       user_name = res.envelope.user.name
       action = res.match[1].toLowerCase()
       ids = (parseInt(incident) for incident in res.match[2].split ',')
@@ -159,7 +157,9 @@ module.exports = (robot) ->
       )
 
   robot.respond /show bosun silence[s]*/i, (res) ->
-    if is_authorized robot, res
+    unless is_authorized robot, res.envelope.user
+      warn_unauthorized res
+    else
       user_name = res.envelope.user.name
       logger.info "hubot-bosun: Retrieving Bosun silences requested by #{user_name}."
 
@@ -228,7 +228,9 @@ module.exports = (robot) ->
 
 
   robot.respond /(set|test) bosun silence for (.+) for (.+) because (.+)/i, (res) ->
-    if is_authorized robot, res
+    unless is_authorized robot, res.envelope.user
+      warn_unauthorized res
+    else
       user_name = res.envelope.user.name
       action = res.match[1].toLowerCase()
       alert_tags_str = res.match[2]
@@ -299,7 +301,9 @@ module.exports = (robot) ->
 
 
   robot.respond /clear bosun silence (.+)/i, (res) ->
-    if is_authorized robot, res
+    unless is_authorized robot, res.envelope.user
+      warn_unauthorized res
+    else
       user_name = res.envelope.user.name
       id = res.match[1]
       logger.info "hubot-bosun: Clearing silence '#{id}' requested by #{user_name}."
@@ -334,8 +338,7 @@ module.exports = (robot) ->
       )
 
   robot.on 'bosun.set_silence', (event) ->
-    # TODO: Make sure this also works, if auth is disabled
-    unless robot.auth.hasRole(event.user, config.role)
+    unless is_authorized robot, event.user
       logger.warning "hubot-bosun: #{event.user} tried to run event 'bosun.set_silence' but was not authorized."
     else
       logger.info "hubot-bosun: setting silence for alert '#{event.alert}' and tags '#{event.tags}' for #{event.duration} requested by #{event.user.name} via event."
@@ -388,8 +391,7 @@ module.exports = (robot) ->
       )
 
   robot.on 'bosun.clear_silence', (event) ->
-    # TODO: Make sure this also works, if auth is disabled
-    unless robot.auth.hasRole(event.user, config.role)
+    unless is_authorized robot, event.user
       logger.warning "hubot-bosun: #{event.user} tried to run event 'bosun.clear_silence' but was not authorized."
     else
       logger.info "hubot-bosun: clearing silence with id '#{event.silence_id}' equested by #{event.user.name} via event."
@@ -416,8 +418,7 @@ module.exports = (robot) ->
 
 
   robot.on 'bosun.check_silence', (event) ->
-    # TODO: Make sure this also works, if auth is disabled
-    unless robot.auth.hasRole(event.user, config.role)
+    unless is_authorized robot, event.user
       logger.warning "hubot-bosun: #{event.user} tried to run event 'bosun.check_silence' but was not authorized."
     else
       logger.info "hubot-bosun: checking silence requested by #{event.user.name} via event."
@@ -450,13 +451,8 @@ module.exports = (robot) ->
       res.reply "DOES NOT COMPUTE: #{err}"
 
 
-is_authorized = (robot, res) ->
-  unless config.role is ""
-    user = res.envelope.user
-    unless robot.auth.hasRole(user, config.role)
-      warn_unauthorized res
-      return false
-  true
+is_authorized = (robot, user) ->
+  config.role is "" or robot.auth.hasRole(user, config.role)
 
 warn_unauthorized = (res) ->
   user = res.envelope.user.name
