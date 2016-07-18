@@ -38,6 +38,7 @@
 #     * Docs
 #       * Notes in this file
 #       * Readme
+#     * Fix TODOs
 #   (*) Graph queries
 
 request = require 'request'
@@ -337,6 +338,59 @@ module.exports = (robot) ->
             }
       )
 
+  robot.on 'bosun.set_silence', (event) ->
+    # TODO: Make sure this also works, if auth is disabled
+    unless robot.auth.hasRole(event.user, config.role)
+      logger.warning "hubot-bosun: #{event.user} tried to run event 'bosun.set_silence' but was not authorized."
+    else
+      logger.info "hubot-bosun: setting silence for alert '#{event.alert}' and tags '#{event.tags}' for #{event.duration} requested by #{event.user.name} via event."
+
+      data =
+        duration: event.duration
+        alert: event.alert
+        tags: event.tags
+        message: event.message
+        forget: event.forget
+        confirm: "true"
+      req = request.post("#{config.host}/api/silence/set", {timeout: config.timeout, json: true, body: data}, (err, response, body) ->
+        if err
+          handle_bosun_err null, err, response, body
+          robot.emit 'bosun.result.set_silence.failed', {
+            user: event.user
+            room: event.room
+            message: "Connection to Bosun failed."
+          }
+        else if response and response.statusCode != 200
+          robot.emit 'bosun.result.set_silence.failed', {
+            user: event.user
+            room: event.room
+            message: "API call failed with status code #{response.statusCode}."
+          }
+        else
+          # ARGH: Bosun does not return the ID of the Silence via API, so we have to figure it out with a second call and some heuristics
+          req = request.get("#{config.host}/api/silence/get", {timeout: config.timeout}, (err, response, body) ->
+            if err
+              handle_bosun_err res, err, response, body
+              robot.emit 'bosun.result.set_silence.failed', {
+                user: event.user
+                room: event.room
+                message: "Cloud not retrieve actives silences after setting your's; status code #{response.statusCode}."
+              }
+            else
+              silences = JSON.parse body
+              # map silences from object to array and add unix_time_stamp for time based ordering
+              silences = ({Id: k, start_as_unix_time: moment(v.Start).valueOf(), silence: v} for k,v of silences)
+              silences.sort( (a,b) -> a.start_as_unix_time < b.start_as_unix_time )
+              # This should be the younges alarm
+              silence_id = silences[0].Id
+
+              robot.emit 'bosun.result.set_silence.successful',
+                user: event.user
+                room: event.room
+                duration: event.duration
+                silence_id: silence_id
+          )
+      )
 
   robot.error (err, res) ->
     robot.logger.error "hubot-bosun: DOES NOT COMPUTE"
@@ -360,10 +414,11 @@ warn_unauthorized = (res) ->
   res.reply "Sorry, you're not allowed to do that. You need the '#{config.role}' role."
 
 handle_bosun_err = (res, err, response, body) ->
-  logger.error "hubot-bosun: Requst to Bosun timed out." if err.code is 'ETIMEDOUT'
-  logger.error "hubot-bosun: Connection to Bosun failed." if err.connect is true or err.code is 'ECONNREFUSED'
+  logger.error "hubot-bosun: Requst to Bosun timed out." if err? and err.code is 'ETIMEDOUT'
+  logger.error "hubot-bosun: Connection to Bosun failed." if err? and err.connect is true or err.code is 'ECONNREFUSED'
   logger.error "hubot-bosun: Failed to retrieve response from Bosun. Error: '#{err}', reponse: '#{response}', body: '#{body}'"
-  res.reply "Ouuch. I'm sorry, but I couldn't contact Bosun."
+  if res
+    res.reply "Ouuch. I'm sorry, but I couldn't contact Bosun."
 
 format_date_str = (date_str) ->
   if config.relative_time

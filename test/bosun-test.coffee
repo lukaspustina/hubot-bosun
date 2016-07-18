@@ -519,6 +519,7 @@ describe 'bosun with Slack', ->
             ]
           }
 
+
 describe 'bosun events', ->
   beforeEach ->
     [@room, @bosun] = setup_test_env {
@@ -535,12 +536,69 @@ describe 'bosun events', ->
   context "set_silence", ->
 
     context "set_silence successfully", ->
+      beforeEach ->
+        robot = @room.robot
+        @room.robot.on 'bosun.result.set_silence.successful', (event) ->
+          robot.brain.set 'test.bosun.result.set_silence', event
 
-      it "on set_silence"
+        @room.robot.emit 'bosun.set_silence', {
+          user:
+            id: 'alice'
+            name: 'alice'
+          room: "a room"
+          duration: "10m"
+          alert: "test.lukas"
+          tags: "host=muffin,service=lukas"
+          message: "I need some rest time"
+          forget: "true"
+        }
+        co =>
+          yield new Promise.delay api_call_delay
+
+      it "on set_silence", ->
+        event = @room.robot.brain.get 'test.bosun.result.set_silence'
+        expect(event).not.to.eql null
+        expect(event).to.eql {
+          user:
+            id: 'alice'
+            name: 'alice'
+          room: "a room"
+          duration: "10m"
+          silence_id: "6e89533c74c3f9b74417b37e7cce75c384d29dc7"
+        }
+
 
     context "set_silence failed", ->
+      beforeEach ->
+        robot = @room.robot
+        @room.robot.on 'bosun.result.set_silence.failed', (event) ->
+          robot.brain.set 'test.bosun.result.set_silence', event
 
-      it "on set_silence"
+        @room.robot.emit 'bosun.set_silence', {
+          user:
+            id: 'alice'
+            name: 'alice'
+          room: "a room"
+          duration: "10m"
+          alert: "test.fail"
+          tags: "host=muffin,service=lukas"
+          message: "I need some rest time"
+          forget: "true"
+        }
+        co =>
+          yield new Promise.delay api_call_delay
+
+      it "on set_silence", ->
+        event = @room.robot.brain.get 'test.bosun.result.set_silence'
+        expect(event).not.to.eql null
+        expect(event).to.eql {
+          user:
+            id: 'alice'
+            name: 'alice'
+          room: "a room"
+          message: "API call failed with status code 500."
+        }
+
 
   context "clear_silence", ->
 
@@ -551,6 +609,7 @@ describe 'bosun events', ->
     context "clear_silence failed", ->
 
       it "on clear_silence"
+
 
   context "check_silence", ->
 
