@@ -387,6 +387,33 @@ module.exports = (robot) ->
           )
       )
 
+  robot.on 'bosun.clear_silence', (event) ->
+    # TODO: Make sure this also works, if auth is disabled
+    unless robot.auth.hasRole(event.user, config.role)
+      logger.warning "hubot-bosun: #{event.user} tried to run event 'bosun.clear_silence' but was not authorized."
+    else
+      logger.info "hubot-bosun: clearing silence with id '#{event.silence_id}' equested by #{event.user.name} via event."
+
+      req = request.post("#{config.host}/api/silence/clear?id=#{event.silence_id}", {timeout: config.timeout, json: true, body: {}}, (err, response, body) ->
+        if err
+          handle_bosun_err null, err, response, body
+          robot.emit 'bosun.result.clear_silence.failed', {
+            user: event.user
+            room: event.room
+            silence_id: event.silence_id
+            message: "Connection to Bosun failed."
+          }
+        else if response and response.statusCode != 200
+          robot.emit 'bosun.result.clear_silence.failed', {
+            user: event.user
+            room: event.room
+            silence_id: event.silence_id
+            message: "API call failed with status code #{response.statusCode}."
+          }
+        else
+          robot.emit 'bosun.result.clear_silence.successful', event
+      )
+
 
   robot.on 'bosun.check_silence', (event) ->
     # TODO: Make sure this also works, if auth is disabled

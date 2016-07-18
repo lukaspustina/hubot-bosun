@@ -603,12 +603,60 @@ describe 'bosun events', ->
   context "clear_silence", ->
 
     context "clear_silence successfully", ->
+      beforeEach ->
+        robot = @room.robot
+        @room.robot.on 'bosun.result.clear_silence.successful', (event) ->
+          robot.brain.set 'test.bosun.result.clear_silence', event
 
-      it "on clear_silence"
+        @room.robot.emit 'bosun.clear_silence', {
+          user:
+            id: 'alice'
+            name: 'alice'
+          room: "a room"
+          silence_id: "6e89533c74c3f9b74417b37e7cce75c384d29dc7"
+        }
+        co =>
+          yield new Promise.delay api_call_delay
+
+      it "on clear_silence", ->
+        event = @room.robot.brain.get 'test.bosun.result.clear_silence'
+        expect(event).not.to.eql null
+        expect(event).to.eql {
+          user:
+            id: 'alice'
+            name: 'alice'
+          room: "a room"
+          silence_id: "6e89533c74c3f9b74417b37e7cce75c384d29dc7"
+        }
+
 
     context "clear_silence failed", ->
+      beforeEach ->
+        robot = @room.robot
+        @room.robot.on 'bosun.result.clear_silence.failed', (event) ->
+          robot.brain.set 'test.bosun.result.clear_silence', event
 
-      it "on clear_silence"
+        @room.robot.emit 'bosun.clear_silence', {
+          user:
+            id: 'alice'
+            name: 'alice'
+          room: "a room"
+          silence_id: "xxx9533c74c3f9b74417b37e7cce75c384d29dc7"
+        }
+        co =>
+          yield new Promise.delay api_call_delay
+
+      it "on clear_silence", ->
+        event = @room.robot.brain.get 'test.bosun.result.clear_silence'
+        expect(event).not.to.eql null
+        expect(event).to.eql {
+          user:
+            id: 'alice'
+            name: 'alice'
+          room: "a room"
+          silence_id: "xxx9533c74c3f9b74417b37e7cce75c384d29dc7"
+          message: "API call failed with status code 500."
+        }
 
 
   context "check_silence", ->
