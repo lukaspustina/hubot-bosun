@@ -613,13 +613,64 @@ describe 'bosun events', ->
 
   context "check_silence", ->
 
-    context "clear_silence successfully", ->
+    context "check_silence successfully", ->
 
-      it "on check_silence"
+      context "silence is still active", ->
+        beforeEach ->
+          robot = @room.robot
+          @room.robot.on 'bosun.result.check_silence.successful', (event) ->
+            robot.brain.set 'test.bosun.result.check_silence', event
 
-    context "check_silence failed", ->
+          @room.robot.emit 'bosun.check_silence', {
+            user:
+              id: 'alice'
+              name: 'alice'
+            room: "a room"
+            silence_id: '6e89533c74c3f9b74417b37e7cce75c384d29dc7'
+          }
+          co =>
+            yield new Promise.delay api_call_delay
 
-      it "on check_silence"
+        it "on check_silence", ->
+          event = @room.robot.brain.get 'test.bosun.result.check_silence'
+          expect(event).not.to.eql null
+          expect(event).to.eql {
+            user:
+              id: 'alice'
+              name: 'alice'
+            room: "a room"
+            silence_id: '6e89533c74c3f9b74417b37e7cce75c384d29dc7'
+            active: true
+          }
+
+      context "silence is not actice anymore", ->
+        beforeEach ->
+          robot = @room.robot
+          @room.robot.on 'bosun.result.check_silence.successful', (event) ->
+            robot.brain.set 'test.bosun.result.check_silence', event
+
+          @room.robot.emit 'bosun.check_silence', {
+            user:
+              id: 'alice'
+              name: 'alice'
+            room: "a room"
+            silence_id: 'xxx9533c74c3f9b74417b37e7cce75c384d29dc7'
+          }
+          co =>
+            yield new Promise.delay api_call_delay
+
+        it "on check_silence", ->
+          event = @room.robot.brain.get 'test.bosun.result.check_silence'
+          expect(event).not.to.eql null
+          expect(event).to.eql {
+            user:
+              id: 'alice'
+              name: 'alice'
+            room: "a room"
+            silence_id: 'xxx9533c74c3f9b74417b37e7cce75c384d29dc7'
+            active: false
+          }
+
 
 
 setup_test_env = ( env ) ->

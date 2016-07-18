@@ -26,15 +26,10 @@
 # Todos:
 #   * Listen for events
 #     * events -- receive
-#       * bosun.set_silence
 #       * bosun.clear_silence
-#       * bosun.check_silence
 #     * events -- emit
-#       * bosun.result.set_silence.success
-#       * bosun.result.set_silence.failure
 #       * bosun.result.clear_silence.success
 #       * bosun.result.clear_silence.failure
-#       * bosun.result.check_silence
 #     * Docs
 #       * Notes in this file
 #       * Readme
@@ -391,6 +386,35 @@ module.exports = (robot) ->
                 silence_id: silence_id
           )
       )
+
+
+  robot.on 'bosun.check_silence', (event) ->
+    # TODO: Make sure this also works, if auth is disabled
+    unless robot.auth.hasRole(event.user, config.role)
+      logger.warning "hubot-bosun: #{event.user} tried to run event 'bosun.check_silence' but was not authorized."
+    else
+      logger.info "hubot-bosun: checking silence requested by #{event.user.name} via event."
+
+      req = request.get("#{config.host}/api/silence/get", {timeout: config.timeout}, (err, response, body) ->
+        if err
+          handle_bosun_err res, err, response, body
+          robot.emit 'bosun.result.check_silence.failed', {
+            user: event.user
+            room: event.room
+            message: "Cloud not retrieve actives silences; status code #{response.statusCode}."
+          }
+        else
+          silences = JSON.parse body
+          silences = (k for k,v of silences)
+          active = event.silence_id in silences
+
+          robot.emit 'bosun.result.check_silence.successful',
+            user: event.user
+            room: event.room
+            silence_id: event.silence_id
+            active: active
+      )
+
 
   robot.error (err, res) ->
     robot.logger.error "hubot-bosun: DOES NOT COMPUTE"
