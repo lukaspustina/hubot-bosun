@@ -462,6 +462,7 @@ module.exports = (robot) ->
 
 
 is_authorized = (robot, user) ->
+  logger.debug "Checking authorization for user '#{user.name}' and role '#{config.role}': role is #{config.role is ""}, auth is #{robot.auth.hasRole(user, config.role)}, combined is #{config.role is "" or robot.auth.hasRole(user, config.role)}."
   config.role is "" or robot.auth.hasRole(user, config.role)
 
 warn_unauthorized = (res) ->
