@@ -1,10 +1,10 @@
 {
   "name": "hubot-bosun",
   "description": "Allows hubot to interact with Bosun.",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "author": "lukas.pustina@gmail.com",
   "license": "MIT",
-  "keywords": "hubot, bosun",
+  "keywords": "hubot, hubot-scripts, bosun",
   "repository": {
     "type": "git",
     "url": "git://github.com/lukaspustina/hubot-bosun.git"
