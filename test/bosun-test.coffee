@@ -44,16 +44,20 @@ describe 'bosun without authorization', ->
           ]
 
       context "succeed even if unauthorized", ->
+        beforeEach ->
+          co =>
+            yield @room.user.say 'bob', '@hubot show open bosun incidents'
+            yield new Promise.delay api_call_delay
+
         it 'show open bosun incidents for unauthorized bob', ->
-          @room.user.say('bob', '@hubot show open bosun incidents').then =>
-            expect(@room.messages).to.eql [
-              ['bob', '@hubot show open bosun incidents']
-              ['hubot', '@bob Retrieving Bosun incidents ...']
-              ['hubot', '@bob Yippie. Done.']
-              ['hubot', '@bob So, there are currently 2 open incidents in Bosun.']
-              ['hubot', '@bob 750 is warning: warning: <no value>.']
-              ['hubot', '@bob 759 is normal: warning: <no value>.']
-            ]
+          expect(@room.messages).to.eql [
+            ['bob', '@hubot show open bosun incidents']
+            ['hubot', '@bob Retrieving Bosun incidents ...']
+            ['hubot', '@bob Yippie. Done.']
+            ['hubot', '@bob So, there are currently 2 open incidents in Bosun.']
+            ['hubot', '@bob 750 is warning: warning: <no value>.']
+            ['hubot', '@bob 759 is normal: warning: <no value>.']
+          ]
 
 
 describe 'bosun', ->
