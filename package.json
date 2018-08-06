@@ -19,7 +19,7 @@
     "request": "^2.87.0"
   },
   "peerDependencies": {
-    "hubot": "2.x"
+    "hubot": "3.x"
   },
   "devDependencies": {
     "bluebird": "^3.5.1",
