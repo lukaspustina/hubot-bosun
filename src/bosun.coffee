@@ -388,7 +388,7 @@ module.exports = (robot) ->
               silences = JSON.parse body
               # map silences from object to array and add unix_time_stamp for time based ordering
               silences = ({Id: k, start_as_unix_time: moment(v.Start).valueOf(), silence: v} for k,v of silences)
-              silences.sort( (a,b) -> a.start_as_unix_time < b.start_as_unix_time )
+              silences.sort( (a,b) -> b.start_as_unix_time - a.start_as_unix_time )
               # This should be the younges alarm
               silence_id = silences[0].Id
 
