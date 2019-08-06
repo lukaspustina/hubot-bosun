@@ -39,8 +39,8 @@ describe 'bosun without authorization', ->
             ['hubot', '@alice Retrieving Bosun incidents ...']
             ['hubot', '@alice Yippie. Done.']
             ['hubot', '@alice So, there are currently 2 open incidents in Bosun.']
-            ['hubot', '@alice 750 is warning: warning: <no value>.']
             ['hubot', '@alice 759 is normal: warning: <no value>.']
+            ['hubot', '@alice 750 is warning: warning: <no value>.']
           ]
 
       context "succeed even if unauthorized", ->
@@ -55,8 +55,8 @@ describe 'bosun without authorization', ->
             ['hubot', '@bob Retrieving Bosun incidents ...']
             ['hubot', '@bob Yippie. Done.']
             ['hubot', '@bob So, there are currently 2 open incidents in Bosun.']
-            ['hubot', '@bob 750 is warning: warning: <no value>.']
             ['hubot', '@bob 759 is normal: warning: <no value>.']
+            ['hubot', '@bob 750 is warning: warning: <no value>.']
           ]
 
 
@@ -89,8 +89,8 @@ describe 'bosun', ->
             ['hubot', '@alice Retrieving Bosun incidents ...']
             ['hubot', '@alice Yippie. Done.']
             ['hubot', '@alice So, there are currently 2 open incidents in Bosun.']
-            ['hubot', '@alice 750 is warning: warning: <no value>.']
             ['hubot', '@alice 759 is normal: warning: <no value>.']
+            ['hubot', '@alice 750 is warning: warning: <no value>.']
           ]
 
       context "Fail if unauthorized", ->
@@ -368,18 +368,18 @@ describe 'bosun with Slack', ->
             text: "So, there are currently 2 open incidents in Bosun."
             attachments: [
               {
-                fallback:"Incident 750 is warning"
-                color: "warning"
-                title: "750: warning: <no value>"
-                title_link: "http://localhost:18070/incident?id=750"
-                text: "*Unacked* and active since 2016-07-01 09:05:58 UTC with _{}_."
-                mrkdwn_in: ["text"]
-              }, {
                 fallback: "Incident 759 is normal"
                 color: "good"
                 title: "759: warning: <no value>",
                 title_link: "http://localhost:18070/incident?id=759"
                 text: "Acked and active since 2016-07-01 09:05:58 UTC with _{}_.\n* lukas acknowledged this incident at 2016-07-01 22:16:37 UTC."
+                mrkdwn_in: ["text"]
+              }, {
+                fallback:"Incident 750 is warning"
+                color: "warning"
+                title: "750: warning: <no value>"
+                title_link: "http://localhost:18070/incident?id=750"
+                text: "*Unacked* and active since 2016-07-01 09:05:58 UTC with _{}_."
                 mrkdwn_in: ["text"]
               }
             ]
