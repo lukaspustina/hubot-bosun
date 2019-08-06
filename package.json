@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "bluebird": "^3.5.5",
-    "chai": "^2.1.1",
+    "chai": "^4.2.0",
     "co": "^4.6.0",
     "coffee-script": "^1.12.7",
     "grunt": "^0.4.5",
